@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyBox Portal - PostgreSQL Database Schema</title>
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --bg: #f3f4f6;
+    --card-bg: #ffffff;
+    --border: #e5e7eb;
+    --text: #111827;
+    --muted: #6b7280;
+    --code-bg: #0f172a;
+    --code-text: #e2e8f0;
+    --pk: #b45309;
+    --fk: #1d4ed8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header {
+    background: #111827;
+    color: #fff;
+    padding: 32px 40px;
+  }
+  header h1 {
+    margin: 0 0 6px;
+    font-size: 24px;
+  }
+  header p {
+    margin: 0;
+    color: #cbd5e1;
+    font-size: 14px;
+  }
+  .wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 24px 60px;
+  }
+  h2 {
+    font-size: 19px;
+    margin: 40px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border);
+  }
+  h2:first-of-type { margin-top: 0; }
+  p.lede {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 760px;
+  }
+
+  /* ---------- Table cards (schema overview) ---------- */
+  .table-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+  }
+  .table-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .table-card .table-name {
+    background: #111827;
+    color: #fff;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Consolas', monospace;
+  }
+  .table-card table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+  }
+  .table-card td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .table-card tr:last-child td { border-bottom: none; }
+  .col-name {
+    font-family: 'Consolas', monospace;
+    white-space: nowrap;
+  }
+  .col-type {
+    color: var(--muted);
+    font-family: 'Consolas', monospace;
+    white-space: nowrap;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .03em;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-left: 6px;
+  }
+  .badge-pk { background: #fef3c7; color: var(--pk); }
+  .badge-fk { background: #dbeafe; color: var(--fk); }
+  .badge-uq { background: #ede9fe; color: #6d28d9; }
+
+  /* ---------- Relationships ---------- */
+  .relationship-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .relationship-list li {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    font-size: 13.5px;
+    font-family: 'Consolas', monospace;
+  }
+  .relationship-list .arrow { color: var(--primary); font-weight: 700; margin: 0 6px; }
+
+  /* ---------- SQL code block ---------- */
+  pre {
+    background: var(--code-bg);
+    color: var(--code-text);
+    padding: 20px 22px;
+    border-radius: 10px;
+    overflow-x: auto;
+    font-size: 13px;
+    line-height: 1.6;
+    font-family: 'Consolas', 'Courier New', monospace;
+  }
+  pre .kw { color: #93c5fd; }
+  pre .tbl { color: #fcd34d; }
+  pre .str { color: #86efac; }
+  pre .com { color: #64748b; font-style: italic; }
+
+  .note-box {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-size: 13.5px;
+    color: #1e3a8a;
+    margin-top: 14px;
+  }
+
+  .mapping-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .mapping-table th, .mapping-table td {
+    padding: 9px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  .mapping-table th {
+    background: #f9fafb;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: var(--muted);
+  }
+  .mapping-table td.field {
+    font-family: 'Consolas', monospace;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>MyBox Portal &mdash; PostgreSQL Database Schema</h1>
+  <p>Relational schema derived from MyBox.html (prototype): users, family members, insurance policies and vehicles.</p>
+</header>
+
+<div class="wrap">
+
+  <h2>Overview</h2>
+  <p class="lede">
+    The prototype stores one record per mobile number in <code>localStorage</code>, with each user owning three
+    child collections: family members, insurance policies and vehicles. This schema normalizes that structure into
+    four PostgreSQL tables: <strong>users</strong> (parent) and <strong>family_members</strong>,
+    <strong>policies</strong>, <strong>vehicles</strong> (children), each linked back to <code>users</code> via a
+    foreign key. Fields that the app computes on the fly (Age, Maturity Date, Next Premium Date) are left out of
+    storage and are expected to be derived in application code or SQL views, since they depend on "today's date".
+  </p>
+
+  <h2>Entity Overview</h2>
+  <div class="table-grid">
+
+    <div class="table-card">
+      <div class="table-name">users</div>
+      <table>
+        <tr><td class="col-name">id <span class="badge badge-pk">PK</span></td><td class="col-type">BIGSERIAL</td></tr>
+        <tr><td class="col-name">mobile <span class="badge badge-uq">UQ</span></td><td class="col-type">VARCHAR(10)</td></tr>
+        <tr><td class="col-name">name</td><td class="col-type">VARCHAR(150)</td></tr>
+        <tr><td class="col-name">email</td><td class="col-type">VARCHAR(150)</td></tr>
+        <tr><td class="col-name">date_of_birth</td><td class="col-type">DATE</td></tr>
+        <tr><td class="col-name">created_at</td><td class="col-type">TIMESTAMPTZ</td></tr>
+        <tr><td class="col-name">updated_at</td><td class="col-type">TIMESTAMPTZ</td></tr>
+      </table>
+    </div>
+
+    <div class="table-card">
+      <div class="table-name">family_members</div>
+      <table>
+        <tr><td class="col-name">id <span class="badge badge-pk">PK</span></td><td class="col-type">BIGSERIAL</td></tr>
+        <tr><td class="col-name">user_id <span class="badge badge-fk">FK</span></td><td class="col-type">BIGINT</td></tr>
+        <tr><td class="col-name">name</td><td class="col-type">VARCHAR(150)</td></tr>
+        <tr><td class="col-name">date_of_birth</td><td class="col-type">DATE</td></tr>
+        <tr><td class="col-name">relationship</td><td class="col-type">VARCHAR(30)</td></tr>
+        <tr><td class="col-name">mobile</td><td class="col-type">VARCHAR(10)</td></tr>
+        <tr><td class="col-name">living_together</td><td class="col-type">VARCHAR(3)</td></tr>
+        <tr><td class="col-name">created_at</td><td class="col-type">TIMESTAMPTZ</td></tr>
+        <tr><td class="col-name">updated_at</td><td class="col-type">TIMESTAMPTZ</td></tr>
+      </table>
+    </div>
+
+    <div class="table-card">
+      <div class="table-name">policies</div>
+      <table>
+        <tr><td class="col-name">id <span class="badge badge-pk">PK</span></td><td class="col-type">BIGSERIAL</td></tr>
+        <tr><td class="col-name">user_id <span class="badge badge-fk">FK</span></td><td class="col-type">BIGINT</td></tr>
+        <tr><td class="col-name">policy_no <span class="badge badge-uq">UQ*</span></td><td class="col-type">VARCHAR(50)</td></tr>
+        <tr><td class="col-name">bank_name</td><td class="col-type">VARCHAR(150)</td></tr>
+        <tr><td class="col-name">policy_type</td><td class="col-type">VARCHAR(20)</td></tr>
+        <tr><td class="col-name">start_date</td><td class="col-type">DATE</td></tr>
+        <tr><td class="col-name">policy_term_years</td><td class="col-type">SMALLINT</td></tr>
+        <tr><td class="col-name">paying_term_years</td><td class="col-type">SMALLINT</td></tr>
+        <tr><td class="col-name">emi_frequency</td><td class="col-type">VARCHAR(20)</td></tr>
+        <tr><td class="col-name">created_at</td><td class="col-type">TIMESTAMPTZ</td></tr>
+        <tr><td class="col-name">updated_at</td><td class="col-type">TIMESTAMPTZ</td></tr>
+      </table>
+    </div>
+
+    <div class="table-card">
+      <div class="table-name">vehicles</div>
+      <table>
+        <tr><td class="col-name">id <span class="badge badge-pk">PK</span></td><td class="col-type">BIGSERIAL</td></tr>
+        <tr><td class="col-name">user_id <span class="badge badge-fk">FK</span></td><td class="col-type">BIGINT</td></tr>
+        <tr><td class="col-name">registration_no <span class="badge badge-uq">UQ</span></td><td class="col-type">VARCHAR(15)</td></tr>
+        <tr><td class="col-name">vehicle_type</td><td class="col-type">VARCHAR(10)</td></tr>
+        <tr><td class="col-name">make</td><td class="col-type">VARCHAR(100)</td></tr>
+        <tr><td class="col-name">model_year</td><td class="col-type">SMALLINT</td></tr>
+        <tr><td class="col-name">insurance_policy</td><td class="col-type">VARCHAR(100)</td></tr>
+        <tr><td class="col-name">pollution_upto</td><td class="col-type">DATE</td></tr>
+        <tr><td class="col-name">created_at</td><td class="col-type">TIMESTAMPTZ</td></tr>
+        <tr><td class="col-name">updated_at</td><td class="col-type">TIMESTAMPTZ</td></tr>
+      </table>
+    </div>
+
+  </div>
+
+  <h2>Relationships</h2>
+  <ul class="relationship-list">
+    <li>users.id <span class="arrow">&#8594;</span> family_members.user_id &nbsp;(one user has many family members)</li>
+    <li>users.id <span class="arrow">&#8594;</span> policies.user_id &nbsp;(one user has many policies)</li>
+    <li>users.id <span class="arrow">&#8594;</span> vehicles.user_id &nbsp;(one user has many vehicles)</li>
+  </ul>
+
+  <h2>SQL Schema (PostgreSQL)</h2>
+  <pre><span class="com">-- =========================================================
+-- MyBox Portal: PostgreSQL schema
+-- =========================================================</span>
+
+<span class="kw">CREATE TABLE</span> <span class="tbl">users</span> (
+    id              BIGSERIAL PRIMARY KEY,
+    mobile          VARCHAR(10) NOT NULL UNIQUE
+                        CHECK (mobile ~ <span class="str">'^[0-9]{10}$'</span>),
+    name            VARCHAR(150) NOT NULL,
+    email           VARCHAR(150) NOT NULL
+                        CHECK (email ~ <span class="str">'^[^@\s]+@[^@\s]+\.[^@\s]+$'</span>),
+    date_of_birth   DATE,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+<span class="kw">CREATE TABLE</span> <span class="tbl">family_members</span> (
+    id               BIGSERIAL PRIMARY KEY,
+    user_id          BIGINT NOT NULL
+                         REFERENCES <span class="tbl">users</span>(id) ON DELETE CASCADE,
+    name             VARCHAR(150) NOT NULL,
+    date_of_birth    DATE,
+    relationship     VARCHAR(30) NOT NULL
+                         CHECK (relationship IN (
+                             <span class="str">'Self'</span>, <span class="str">'Spouse'</span>, <span class="str">'Son'</span>, <span class="str">'Daughter'</span>, <span class="str">'Father'</span>,
+                             <span class="str">'Mother'</span>, <span class="str">'Brother'</span>, <span class="str">'Sister'</span>, <span class="str">'Doughter-in-law'</span>,
+                             <span class="str">'Son-in-law'</span>, <span class="str">'Uncle'</span>, <span class="str">'Aunt'</span>,
+                             <span class="str">'Cousin Sister'</span>, <span class="str">'Cousin Brother'</span>
+                         )),
+    mobile           VARCHAR(10)
+                         CHECK (mobile IS NULL OR mobile ~ <span class="str">'^[0-9]{10}$'</span>),
+    living_together  VARCHAR(3) NOT NULL
+                         CHECK (living_together IN (<span class="str">'Yes'</span>, <span class="str">'No'</span>)),
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at       TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+<span class="kw">CREATE INDEX</span> idx_family_members_user_id <span class="kw">ON</span> <span class="tbl">family_members</span>(user_id);
+
+<span class="kw">CREATE TABLE</span> <span class="tbl">policies</span> (
+    id                  BIGSERIAL PRIMARY KEY,
+    user_id             BIGINT NOT NULL
+                            REFERENCES <span class="tbl">users</span>(id) ON DELETE CASCADE,
+    policy_no           VARCHAR(50) NOT NULL,
+    bank_name           VARCHAR(150) NOT NULL,
+    policy_type         VARCHAR(20) NOT NULL
+                            CHECK (policy_type IN (<span class="str">'Life Insurance'</span>, <span class="str">'Health Insurance'</span>)),
+    start_date          DATE NOT NULL,
+    policy_term_years   SMALLINT NOT NULL CHECK (policy_term_years BETWEEN 1 AND 60),
+    paying_term_years   SMALLINT NOT NULL CHECK (paying_term_years BETWEEN 1 AND 60),
+    emi_frequency       VARCHAR(20) NOT NULL
+                            CHECK (emi_frequency IN (
+                                <span class="str">'Monthly'</span>, <span class="str">'Quaterly'</span>, <span class="str">'Half Yearly'</span>,
+                                <span class="str">'Yearly'</span>, <span class="str">'Single Premium'</span>
+                            )),
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (user_id, policy_no)
+);
+
+<span class="kw">CREATE INDEX</span> idx_policies_user_id <span class="kw">ON</span> <span class="tbl">policies</span>(user_id);
+
+<span class="kw">CREATE TABLE</span> <span class="tbl">vehicles</span> (
+    id                 BIGSERIAL PRIMARY KEY,
+    user_id            BIGINT NOT NULL
+                           REFERENCES <span class="tbl">users</span>(id) ON DELETE CASCADE,
+    registration_no    VARCHAR(15) NOT NULL UNIQUE
+                           CHECK (registration_no ~ <span class="str">'^[A-Z]{2}[0-9]{1,2}[A-Z]{1,3}[0-9]{4}$'</span>),
+    vehicle_type       VARCHAR(10) NOT NULL
+                           CHECK (vehicle_type IN (<span class="str">'Car'</span>, <span class="str">'Bike'</span>, <span class="str">'Scooty'</span>)),
+    make               VARCHAR(100) NOT NULL,
+    model_year         SMALLINT NOT NULL
+                           CHECK (model_year BETWEEN 1990 AND 2100),
+    insurance_policy   VARCHAR(100),
+    pollution_upto     DATE,
+    created_at         TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at         TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+<span class="kw">CREATE INDEX</span> idx_vehicles_user_id <span class="kw">ON</span> <span class="tbl">vehicles</span>(user_id);
+
+<span class="com">-- =========================================================
+-- Keep updated_at current on every UPDATE
+-- =========================================================</span>
+<span class="kw">CREATE OR REPLACE FUNCTION</span> set_updated_at()
+<span class="kw">RETURNS TRIGGER AS</span> $$
+<span class="kw">BEGIN</span>
+    NEW.updated_at = now();
+    <span class="kw">RETURN</span> NEW;
+<span class="kw">END</span>;
+$$ <span class="kw">LANGUAGE</span> plpgsql;
+
+<span class="kw">CREATE TRIGGER</span> trg_users_updated_at
+    <span class="kw">BEFORE UPDATE ON</span> <span class="tbl">users</span>
+    <span class="kw">FOR EACH ROW EXECUTE FUNCTION</span> set_updated_at();
+
+<span class="kw">CREATE TRIGGER</span> trg_family_members_updated_at
+    <span class="kw">BEFORE UPDATE ON</span> <span class="tbl">family_members</span>
+    <span class="kw">FOR EACH ROW EXECUTE FUNCTION</span> set_updated_at();
+
+<span class="kw">CREATE TRIGGER</span> trg_policies_updated_at
+    <span class="kw">BEFORE UPDATE ON</span> <span class="tbl">policies</span>
+    <span class="kw">FOR EACH ROW EXECUTE FUNCTION</span> set_updated_at();
+
+<span class="kw">CREATE TRIGGER</span> trg_vehicles_updated_at
+    <span class="kw">BEFORE UPDATE ON</span> <span class="tbl">vehicles</span>
+    <span class="kw">FOR EACH ROW EXECUTE FUNCTION</span> set_updated_at();
+
+<span class="com">-- =========================================================
+-- Optional: views for the app's computed/display fields
+-- =========================================================</span>
+<span class="kw">CREATE OR REPLACE VIEW</span> <span class="tbl">v_family_members</span> <span class="kw">AS</span>
+<span class="kw">SELECT</span> fm.*,
+       <span class="kw">DATE_PART</span>(<span class="str">'year'</span>, AGE(fm.date_of_birth)) <span class="kw">AS</span> age
+<span class="kw">FROM</span> <span class="tbl">family_members</span> fm;
+
+<span class="kw">CREATE OR REPLACE VIEW</span> <span class="tbl">v_policies</span> <span class="kw">AS</span>
+<span class="kw">SELECT</span> p.*,
+       (p.start_date + (p.policy_term_years || <span class="str">' years'</span>)::interval)::date <span class="kw">AS</span> maturity_date
+<span class="kw">FROM</span> <span class="tbl">policies</span> p;</pre>
+
+  <div class="note-box">
+    <strong>Note on <code>policy_no</code>:</strong> marked unique per-user (<code>UNIQUE (user_id, policy_no)</code>)
+    rather than globally unique, since two different customers of the same bank could in theory be issued
+    overlapping identifiers in mock/test data. Switch to a plain <code>UNIQUE</code> column if policy numbers are
+    guaranteed globally unique in production. <code>Next Premium Date</code> is intentionally not materialized as a
+    view column because it depends on "today's date" at read time &mdash; compute it in application code or as a
+    scalar function called per-request.
+  </div>
+
+  <h2>Field Mapping (App &#8594; Database)</h2>
+  <table class="mapping-table">
+    <tr><th>Page</th><th>App Field</th><th>Column</th><th>Notes</th></tr>
+    <tr><td>Create / Update Profile</td><td class="field">Date of Birth</td><td class="field">users.date_of_birth</td><td>Optional</td></tr>
+    <tr><td>My Family</td><td class="field">Name</td><td class="field">family_members.name</td><td>&ndash;</td></tr>
+    <tr><td>My Family</td><td class="field">Date of Birth</td><td class="field">family_members.date_of_birth</td><td>&ndash;</td></tr>
+    <tr><td>My Family</td><td class="field">Age</td><td class="field">v_family_members.age</td><td>Computed in a view, not stored</td></tr>
+    <tr><td>My Family</td><td class="field">Relationship</td><td class="field">family_members.relationship</td><td>CHECK enum</td></tr>
+    <tr><td>My Family</td><td class="field">Mobile No.</td><td class="field">family_members.mobile</td><td>Optional</td></tr>
+    <tr><td>My Family</td><td class="field">Living Together</td><td class="field">family_members.living_together</td><td>Yes / No</td></tr>
+    <tr><td>My Policies</td><td class="field">Policy No.</td><td class="field">policies.policy_no</td><td>&ndash;</td></tr>
+    <tr><td>My Policies</td><td class="field">Bank Name</td><td class="field">policies.bank_name</td><td>&ndash;</td></tr>
+    <tr><td>My Policies</td><td class="field">Policy Type</td><td class="field">policies.policy_type</td><td>CHECK enum</td></tr>
+    <tr><td>My Policies</td><td class="field">Start Date</td><td class="field">policies.start_date</td><td>&ndash;</td></tr>
+    <tr><td>My Policies</td><td class="field">Policy / Paying Term</td><td class="field">policies.policy_term_years / paying_term_years</td><td>&ndash;</td></tr>
+    <tr><td>My Policies</td><td class="field">Maturity Date</td><td class="field">v_policies.maturity_date</td><td>Computed in a view, not stored</td></tr>
+    <tr><td>My Policies</td><td class="field">EMI Frequency</td><td class="field">policies.emi_frequency</td><td>CHECK enum</td></tr>
+    <tr><td>My Policies</td><td class="field">Next Premium Date</td><td class="field"><em>(not stored)</em></td><td>Depends on today's date &ndash; compute at query time</td></tr>
+    <tr><td>My Vehicles</td><td class="field">Registration No.</td><td class="field">vehicles.registration_no</td><td>Indian RTO format CHECK</td></tr>
+    <tr><td>My Vehicles</td><td class="field">Vehicle Type</td><td class="field">vehicles.vehicle_type</td><td>CHECK enum</td></tr>
+    <tr><td>My Vehicles</td><td class="field">Make</td><td class="field">vehicles.make</td><td>Free text (mirrors dropdown list)</td></tr>
+    <tr><td>My Vehicles</td><td class="field">Model (Year)</td><td class="field">vehicles.model_year</td><td>&ndash;</td></tr>
+    <tr><td>My Vehicles</td><td class="field">Insurance Policy</td><td class="field">vehicles.insurance_policy</td><td>Optional</td></tr>
+    <tr><td>My Vehicles</td><td class="field">Pollution Certificate Upto</td><td class="field">vehicles.pollution_upto</td><td>&ndash;</td></tr>
+  </table>
+
+</div>
+
+</body>
+</html>

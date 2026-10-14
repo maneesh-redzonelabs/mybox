@@ -1,0 +1,14 @@
+node_modules/
+server/.env
+client/.env
+dist/
+build/
+*.log
+.DS_Store
+coverage/
+
+# Deployment tooling / secrets - never commit
+deploy/
+*.pem
+*accessKeys.csv
+*.rar

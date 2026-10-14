@@ -1,0 +1,1862 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyFamily Portal - Prototype</title>
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --bg: #f3f4f6;
+    --card-bg: #ffffff;
+    --border: #e5e7eb;
+    --text: #111827;
+    --muted: #6b7280;
+    --danger: #dc2626;
+    --success: #16a34a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  .hidden { display: none !important; }
+
+  /* ---------- Auth / Onboarding screens ---------- */
+  .center-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .auth-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    width: 100%;
+    max-width: 380px;
+    padding: 36px 32px;
+  }
+  .auth-card h1 {
+    font-size: 22px;
+    margin: 0 0 6px;
+    text-align: center;
+  }
+  .auth-card p.subtitle {
+    text-align: center;
+    color: var(--muted);
+    margin: 0 0 24px;
+    font-size: 14px;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+  .field {
+    margin-bottom: 18px;
+  }
+  input[type="text"], input[type="tel"], input[type="email"] {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+    transition: border-color .15s;
+  }
+  input:focus {
+    border-color: var(--primary);
+  }
+  .btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: var(--primary);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  .btn:hover { background: var(--primary-dark); }
+  .btn:disabled { background: #9ca3af; cursor: not-allowed; }
+  .btn-link {
+    background: none;
+    border: none;
+    color: var(--primary);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 0;
+    margin-top: 14px;
+    display: inline-block;
+  }
+  .hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 6px;
+  }
+  .error-msg {
+    color: var(--danger);
+    font-size: 13px;
+    margin-top: 8px;
+    min-height: 18px;
+  }
+  .otp-boxes {
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+  }
+  .otp-boxes input {
+    width: 44px;
+    height: 50px;
+    text-align: center;
+    font-size: 20px;
+    padding: 0;
+  }
+
+  /* ---------- App shell ---------- */
+  .app-shell {
+    display: flex;
+    min-height: 100vh;
+  }
+  .sidebar {
+    width: 230px;
+    background: #111827;
+    color: #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 0;
+    flex-shrink: 0;
+  }
+  .sidebar .brand {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    padding: 0 20px 20px;
+    border-bottom: 1px solid #1f2937;
+    margin-bottom: 10px;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #d1d5db;
+    border-left: 3px solid transparent;
+    transition: background .15s, color .15s;
+  }
+  .nav-item:hover {
+    background: #1f2937;
+    color: #fff;
+  }
+  .nav-item.active {
+    background: #1f2937;
+    color: #fff;
+    border-left-color: var(--primary);
+  }
+  .nav-item .icon {
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+  }
+
+  .main-col {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+  .topbar {
+    height: 64px;
+    background: var(--card-bg);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0 28px;
+    gap: 16px;
+    flex-shrink: 0;
+  }
+  .topbar .welcome {
+    font-size: 14px;
+    color: var(--muted);
+  }
+  .profile-wrap {
+    position: relative;
+  }
+  .profile-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .profile-popup {
+    position: absolute;
+    top: 48px;
+    right: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    min-width: 180px;
+    padding: 6px 0;
+    z-index: 50;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-6px);
+    transition: opacity .12s, transform .12s, visibility .12s;
+  }
+  .profile-wrap:hover .profile-popup,
+  .profile-popup:hover {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+  .profile-popup::before {
+    content: "";
+    position: absolute;
+    top: -16px;
+    right: 0;
+    width: 100%;
+    height: 16px;
+  }
+  .popup-item {
+    padding: 10px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .popup-item:hover { background: #f3f4f6; }
+  .popup-item.danger { color: var(--danger); }
+
+  .work-area {
+    flex: 1;
+    padding: 28px;
+    overflow-y: auto;
+  }
+  .work-area h2 {
+    margin: 0 0 4px;
+  }
+  .work-area .section-subtitle {
+    color: var(--muted);
+    font-size: 14px;
+    margin: 0 0 24px;
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 18px;
+  }
+  .stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .stat-card .stat-icon {
+    font-size: 22px;
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #eff6ff;
+  }
+  .stat-card .stat-value {
+    font-size: 30px;
+    font-weight: 700;
+  }
+  .stat-card .stat-label {
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .placeholder-panel {
+    background: var(--card-bg);
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    padding: 40px;
+    text-align: center;
+    color: var(--muted);
+  }
+
+  /* ---------- Data table (My Family etc.) ---------- */
+  .panel-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .data-table th {
+    text-align: left;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 8px;
+  }
+  .data-table td {
+    padding: 8px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .data-table td.sr-col {
+    width: 48px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  .data-table input[type="text"],
+  .data-table input[type="tel"],
+  .data-table input[type="number"],
+  .data-table select {
+    width: 100%;
+    padding: 8px 9px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    outline: none;
+  }
+  .data-table input:focus,
+  .data-table select:focus {
+    border-color: var(--primary);
+  }
+  .remove-row-btn {
+    background: none;
+    border: none;
+    color: var(--danger);
+    font-size: 18px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px 8px;
+  }
+  .remove-row-btn:hover { color: #991b1b; }
+  .edit-row-btn {
+    background: none;
+    border: none;
+    color: var(--primary);
+    font-size: 16px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px 8px;
+  }
+  .edit-row-btn:hover { color: var(--primary-dark); }
+  .row-actions {
+    display: flex;
+    gap: 2px;
+    white-space: nowrap;
+  }
+  .display-text {
+    font-size: 14px;
+    padding: 8px 9px;
+    color: var(--text);
+  }
+  .display-text.muted {
+    color: var(--muted);
+  }
+  .date-field {
+    position: relative;
+  }
+  .date-field .date-display {
+    width: 100%;
+    padding: 8px 30px 8px 9px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 14px;
+    background: #fff;
+    cursor: pointer;
+  }
+  .date-field .date-native {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+  }
+  .date-field .date-icon {
+    position: absolute;
+    right: 9px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 14px;
+    color: var(--muted);
+    pointer-events: none;
+  }
+  .add-row-btn {
+    margin-top: 14px;
+    background: none;
+    border: 1px dashed var(--primary);
+    color: var(--primary);
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .add-row-btn:hover { background: #eff6ff; }
+  .panel-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 22px;
+  }
+  .panel-actions .btn {
+    width: auto;
+    padding: 10px 24px;
+  }
+  .btn-secondary {
+    background: #e5e7eb;
+    color: var(--text);
+  }
+  .btn-secondary:hover { background: #d1d5db; }
+
+  .btn-danger {
+    background: var(--danger);
+    color: #fff;
+  }
+  .btn-danger:hover { background: #b91c1c; }
+
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .modal-box {
+    background: #fff;
+    border-radius: 12px;
+    padding: 28px;
+    width: 100%;
+    max-width: 360px;
+  }
+  .modal-box h3 { margin-top: 0; }
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  .view-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .btn-export {
+    width: auto;
+    white-space: nowrap;
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .format-choice-row {
+    display: flex;
+    gap: 12px;
+    margin-top: 18px;
+  }
+  .format-choice-btn {
+    flex: 1;
+    padding: 18px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    transition: border-color .15s, background .15s;
+  }
+  .format-choice-btn:hover {
+    border-color: var(--primary);
+    background: #eff6ff;
+  }
+  .format-choice-btn .format-icon {
+    font-size: 26px;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN SCREEN ============ -->
+<div id="screen-login" class="center-screen">
+  <div class="auth-card">
+    <h1>Welcome to MyBox</h1>
+    <p class="subtitle">Log in with your mobile number</p>
+
+    <div id="login-step-mobile">
+      <div class="field">
+        <label for="login-mobile">Mobile Number</label>
+        <input type="tel" id="login-mobile" placeholder="e.g. 9876543210" maxlength="10" autocomplete="tel">
+      </div>
+      <button class="btn" id="btn-send-otp" onclick="sendOtp()">Send OTP</button>
+      <div class="error-msg" id="login-mobile-error"></div>
+    </div>
+
+    <div id="login-step-otp" class="hidden">
+      <p class="hint" id="otp-sent-to"></p>
+      <div class="field">
+        <label>Enter OTP</label>
+        <div class="otp-boxes">
+          <input type="text" maxlength="1" class="otp-box" oninput="otpAutoAdvance(this, 0)">
+          <input type="text" maxlength="1" class="otp-box" oninput="otpAutoAdvance(this, 1)">
+          <input type="text" maxlength="1" class="otp-box" oninput="otpAutoAdvance(this, 2)">
+          <input type="text" maxlength="1" class="otp-box" oninput="otpAutoAdvance(this, 3)">
+          <input type="text" maxlength="1" class="otp-box" oninput="otpAutoAdvance(this, 4)">
+          <input type="text" maxlength="1" class="otp-box" oninput="otpAutoAdvance(this, 5)">
+        </div>
+        <p class="hint">Prototype hint: OTP is <strong>123456</strong></p>
+      </div>
+      <button class="btn" id="btn-verify-otp" onclick="verifyOtp()">Verify &amp; Continue</button>
+      <div class="error-msg" id="login-otp-error"></div>
+      <button class="btn-link" onclick="backToMobileStep()">&larr; Change mobile number</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ONBOARDING SCREEN ============ -->
+<div id="screen-onboarding" class="center-screen hidden">
+  <div class="auth-card">
+    <h1>Create your profile</h1>
+    <p class="subtitle">We didn't find this number. Let's get you set up.</p>
+
+    <div class="field">
+      <label for="ob-name">Full Name</label>
+      <input type="text" id="ob-name" placeholder="Jane Doe">
+    </div>
+    <div class="field">
+      <label for="ob-email">Email Address</label>
+      <input type="email" id="ob-email" placeholder="jane@example.com">
+    </div>
+    <div class="field">
+      <label for="ob-dob">Date of Birth</label>
+      <div class="date-field">
+        <input type="text" class="date-display" id="ob-dob-display" value="dd/mm/yyyy" readonly>
+        <input type="date" class="date-native" id="ob-dob" onchange="syncDateDisplay(this)">
+        <span class="date-icon">&#128197;</span>
+      </div>
+    </div>
+    <div class="field">
+      <label for="ob-mobile">Mobile Number</label>
+      <input type="tel" id="ob-mobile" disabled>
+    </div>
+    <button class="btn" onclick="completeOnboarding()">Finish Setup</button>
+    <div class="error-msg" id="onboarding-error"></div>
+  </div>
+</div>
+
+<!-- ============ MAIN APP (LANDING) ============ -->
+<div id="screen-app" class="app-shell hidden">
+  <div class="sidebar">
+    <div class="brand">MyBox Portal</div>
+    <div class="nav-item active" data-view="dashboard" onclick="selectNav(this,'dashboard')">
+      <span class="icon">&#8962;</span> Dashboard
+    </div>
+    <div class="nav-item" data-view="family" onclick="selectNav(this,'family')">
+      <span class="icon">&#128101;</span> My Family
+    </div>
+    <div class="nav-item" data-view="policies" onclick="selectNav(this,'policies')">
+      <span class="icon">&#128196;</span> My Policies
+    </div>
+    <div class="nav-item" data-view="vehicles" onclick="selectNav(this,'vehicles')">
+      <span class="icon">&#128663;</span> My Vehicles
+    </div>
+  </div>
+
+  <div class="main-col">
+    <div class="topbar">
+      <span class="welcome" id="welcome-text"></span>
+      <div class="profile-wrap">
+        <div class="profile-icon" id="profile-initial">U</div>
+        <div class="profile-popup">
+          <div class="popup-item" onclick="openUpdateProfile()">&#9998; Update Profile</div>
+          <div class="popup-item danger" onclick="signOut()">&#10148; Sign Out</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="work-area">
+
+      <!-- Dashboard view -->
+      <div id="view-dashboard">
+        <h2>Dashboard</h2>
+        <p class="section-subtitle">Overview of everything linked to your account</p>
+        <div class="stat-grid">
+          <div class="stat-card">
+            <div class="stat-icon">&#128101;</div>
+            <div class="stat-value" id="stat-family">0</div>
+            <div class="stat-label">Family Members</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">&#128196;</div>
+            <div class="stat-value" id="stat-policies">0</div>
+            <div class="stat-label">Policies</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">&#128663;</div>
+            <div class="stat-value" id="stat-vehicles">0</div>
+            <div class="stat-label">Vehicles</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Other views (placeholders) -->
+      <div id="view-family" class="hidden">
+        <div class="view-header">
+          <div>
+            <h2>My Family</h2>
+            <p class="section-subtitle">Manage your family members</p>
+          </div>
+          <button type="button" class="btn btn-secondary btn-export" onclick="openExportModal('family')">&#8595; Export</button>
+        </div>
+        <div class="panel-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="sr-col">Sr#</th>
+                <th>Name</th>
+                <th>Date of Birth (dd/mm/yyyy)</th>
+                <th>Age</th>
+                <th>Relationship</th>
+                <th>Mobile No.</th>
+                <th>Living Together</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="family-table-body"></tbody>
+          </table>
+          <button type="button" class="add-row-btn" onclick="addFamilyRow()">+ Add Family Member</button>
+          <div class="panel-actions">
+            <button type="button" class="btn btn-secondary" onclick="cancelFamilyEdit()">Cancel</button>
+            <button type="button" class="btn" onclick="saveFamilyMembers()">Save</button>
+          </div>
+        </div>
+      </div>
+      <div id="view-policies" class="hidden">
+        <div class="view-header">
+          <div>
+            <h2>My Policies</h2>
+            <p class="section-subtitle">Manage your insurance policies</p>
+          </div>
+          <button type="button" class="btn btn-secondary btn-export" onclick="openExportModal('policies')">&#8595; Export</button>
+        </div>
+        <div class="panel-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="sr-col">Sr#</th>
+                <th>Policy No.</th>
+                <th>Bank Name</th>
+                <th>Policy Type</th>
+                <th>Start Date</th>
+                <th>Policy Term (yrs)</th>
+                <th>Paying Term (yrs)</th>
+                <th>Maturity Date</th>
+                <th>EMI Frequency</th>
+                <th>Next Premium Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="policies-table-body"></tbody>
+          </table>
+          <button type="button" class="add-row-btn" onclick="addPolicyRow()">+ Add Policy</button>
+          <div class="panel-actions">
+            <button type="button" class="btn btn-secondary" onclick="cancelPoliciesEdit()">Cancel</button>
+            <button type="button" class="btn" onclick="savePolicies()">Save</button>
+          </div>
+        </div>
+      </div>
+      <div id="view-vehicles" class="hidden">
+        <div class="view-header">
+          <div>
+            <h2>My Vehicles</h2>
+            <p class="section-subtitle">Manage your registered vehicles</p>
+          </div>
+          <button type="button" class="btn btn-secondary btn-export" onclick="openExportModal('vehicles')">&#8595; Export</button>
+        </div>
+        <div class="panel-card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th class="sr-col">Sr#</th>
+                <th>Registration No.</th>
+                <th>Vehicle Type</th>
+                <th>Make</th>
+                <th>Model (Year)</th>
+                <th>Insurance Policy</th>
+                <th>Pollution Certificate Upto</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="vehicles-table-body"></tbody>
+          </table>
+          <button type="button" class="add-row-btn" onclick="addVehicleRow()">+ Add Vehicle</button>
+          <div class="panel-actions">
+            <button type="button" class="btn btn-secondary" onclick="cancelVehiclesEdit()">Cancel</button>
+            <button type="button" class="btn" onclick="saveVehicles()">Save</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============ UPDATE PROFILE MODAL ============ -->
+<div id="modal-update-profile" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h3>Update Profile</h3>
+    <div class="field">
+      <label for="up-name">Full Name</label>
+      <input type="text" id="up-name">
+    </div>
+    <div class="field">
+      <label for="up-email">Email Address</label>
+      <input type="email" id="up-email">
+    </div>
+    <div class="field">
+      <label for="up-dob">Date of Birth</label>
+      <div class="date-field">
+        <input type="text" class="date-display" id="up-dob-display" value="dd/mm/yyyy" readonly>
+        <input type="date" class="date-native" id="up-dob" onchange="syncDateDisplay(this)">
+        <span class="date-icon">&#128197;</span>
+      </div>
+    </div>
+    <div class="field">
+      <label>Mobile Number</label>
+      <input type="tel" id="up-mobile" disabled>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeUpdateProfile()">Cancel</button>
+      <button class="btn" onclick="saveUpdateProfile()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ EXPORT FORMAT MODAL ============ -->
+<div id="modal-export" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h3>Export Data</h3>
+    <p class="section-subtitle" style="margin:0 0 4px;">Choose a file format to download</p>
+    <div class="format-choice-row">
+      <button type="button" class="format-choice-btn" onclick="runExport('excel')">
+        <span class="format-icon">&#128202;</span> Excel (.xlsx)
+      </button>
+      <button type="button" class="format-choice-btn" onclick="runExport('pdf')">
+        <span class="format-icon">&#128196;</span> PDF (.pdf)
+      </button>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeExportModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ CONFIRM DELETE MODAL ============ -->
+<div id="modal-confirm-delete" class="modal-overlay hidden">
+  <div class="modal-box">
+    <h3>Confirm Delete</h3>
+    <p class="section-subtitle" id="confirm-delete-message" style="margin:0 0 4px;">Are you sure you want to delete this row?</p>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="cancelDeleteRow()">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDeleteRow()">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   Mock "database" backed by localStorage.
+   Seeded with one existing user so the "already registered"
+   path can be tested immediately: mobile 9999999999
+========================================================= */
+const DB_KEY = 'myfamily_users_db';
+const SESSION_KEY = 'myfamily_session_mobile';
+const MOCK_OTP = '123456';
+
+function loadDb() {
+  let raw = localStorage.getItem(DB_KEY);
+  if (!raw) {
+    const seed = [
+      {
+        mobile: '9999999999',
+        name: 'Maneesh Sharma',
+        email: 'maneesh.sharma@redzonelabs.in',
+        dob: '1985-05-10',
+        vehicles: [
+          { regNo: 'MH12AB1234', vehicleType: 'Car', make: 'Maruti Suzuki', model: 2019, insurancePolicy: 'HDFC-ERGO-MV-2024-7781', pollutionUpto: '2026-12-05' },
+          { regNo: 'MH14CD5678', vehicleType: 'Bike', make: 'Honda Motorcycle & Scooter India (HMSI)', model: 2021, insurancePolicy: 'ICICI-LOMBARD-MV-2024-3321', pollutionUpto: '2026-11-18' }
+        ],
+        familyMembers: [
+          { name: 'Priya Sharma', dob: '1988-03-15', relationship: 'Spouse', mobile: '9876543210', livingTogether: 'Yes' },
+          { name: 'Aarav Sharma', dob: '2014-09-20', relationship: 'Son', mobile: '', livingTogether: 'Yes' },
+          { name: 'Ramesh Sharma', dob: '1958-01-05', relationship: 'Father', mobile: '9123456780', livingTogether: 'No' },
+          { name: 'Sunita Sharma', dob: '1962-06-25', relationship: 'Mother', mobile: '9123456781', livingTogether: 'No' }
+        ],
+        policies: [
+          { policyNo: 'LIC-2015-00123', bankName: 'LIC of India', policyType: 'Life Insurance', startDate: '2015-04-01', policyTerm: 20, payingTerm: 15, emiFrequency: 'Yearly' },
+          { policyNo: 'HDFC-2019-00987', bankName: 'HDFC Life', policyType: 'Health Insurance', startDate: '2019-07-15', policyTerm: 10, payingTerm: 10, emiFrequency: 'Monthly' },
+          { policyNo: 'SBI-2021-00456', bankName: 'SBI Life', policyType: 'Life Insurance', startDate: '2021-01-10', policyTerm: 25, payingTerm: 20, emiFrequency: 'Single Premium' }
+        ]
+      }
+    ];
+    localStorage.setItem(DB_KEY, JSON.stringify(seed));
+    return seed;
+  }
+  return JSON.parse(raw);
+}
+
+function saveDb(db) {
+  localStorage.setItem(DB_KEY, JSON.stringify(db));
+}
+
+function findUser(mobile) {
+  return loadDb().find(u => u.mobile === mobile);
+}
+
+let pendingMobile = null; // mobile number currently going through login flow
+
+/* ---------------- Login: Step 1 - send OTP ---------------- */
+function sendOtp() {
+  const input = document.getElementById('login-mobile');
+  const errorEl = document.getElementById('login-mobile-error');
+  const mobile = input.value.trim();
+
+  if (!/^[0-9]{10}$/.test(mobile)) {
+    errorEl.textContent = 'Please enter a valid 10-digit mobile number.';
+    return;
+  }
+  errorEl.textContent = '';
+  pendingMobile = mobile;
+
+  document.getElementById('otp-sent-to').textContent = 'OTP sent to +91 ' + mobile;
+  document.getElementById('login-step-mobile').classList.add('hidden');
+  document.getElementById('login-step-otp').classList.remove('hidden');
+
+  const boxes = document.querySelectorAll('.otp-box');
+  boxes.forEach(b => b.value = '');
+  if (boxes[0]) boxes[0].focus();
+}
+
+function backToMobileStep() {
+  document.getElementById('login-step-otp').classList.add('hidden');
+  document.getElementById('login-step-mobile').classList.remove('hidden');
+  document.getElementById('login-otp-error').textContent = '';
+}
+
+function otpAutoAdvance(el, idx) {
+  const boxes = document.querySelectorAll('.otp-box');
+  if (el.value && idx < boxes.length - 1) {
+    boxes[idx + 1].focus();
+  }
+}
+
+/* ---------------- Login: Step 2 - verify OTP ---------------- */
+function verifyOtp() {
+  const boxes = document.querySelectorAll('.otp-box');
+  const entered = Array.from(boxes).map(b => b.value).join('');
+  const errorEl = document.getElementById('login-otp-error');
+
+  if (entered.length < 6) {
+    errorEl.textContent = 'Please enter the complete 6-digit OTP.';
+    return;
+  }
+  if (entered !== MOCK_OTP) {
+    errorEl.textContent = 'Incorrect OTP. Please try again.';
+    return;
+  }
+  errorEl.textContent = '';
+
+  const existingUser = findUser(pendingMobile);
+  if (existingUser) {
+    startSession(pendingMobile);
+  } else {
+    document.getElementById('ob-mobile').value = pendingMobile;
+    document.getElementById('screen-login').classList.add('hidden');
+    document.getElementById('screen-onboarding').classList.remove('hidden');
+  }
+}
+
+/* ---------------- Onboarding ---------------- */
+function completeOnboarding() {
+  const name = document.getElementById('ob-name').value.trim();
+  const email = document.getElementById('ob-email').value.trim();
+  const dob = document.getElementById('ob-dob').value;
+  const errorEl = document.getElementById('onboarding-error');
+
+  if (!name) {
+    errorEl.textContent = 'Please enter your name.';
+    return;
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    errorEl.textContent = 'Please enter a valid email address.';
+    return;
+  }
+  errorEl.textContent = '';
+
+  const db = loadDb();
+  db.push({
+    mobile: pendingMobile,
+    name: name,
+    email: email,
+    dob: dob || '',
+    familyMembers: [
+      { name: name, dob: dob || '', relationship: 'Self', mobile: pendingMobile, livingTogether: 'NA' }
+    ],
+    policies: [],
+    vehicles: []
+  });
+  saveDb(db);
+
+  startSession(pendingMobile);
+}
+
+/* ---------------- Session / Landing ---------------- */
+function startSession(mobile) {
+  localStorage.setItem(SESSION_KEY, mobile);
+  document.getElementById('screen-login').classList.add('hidden');
+  document.getElementById('screen-onboarding').classList.add('hidden');
+  document.getElementById('screen-app').classList.remove('hidden');
+  renderApp(mobile);
+}
+
+function refreshHeaderAndStats(mobile) {
+  const user = findUser(mobile);
+  if (!user) return;
+
+  document.getElementById('welcome-text').textContent = 'Welcome, ' + user.name;
+  document.getElementById('profile-initial').textContent = user.name.trim().charAt(0).toUpperCase() || 'U';
+
+  document.getElementById('stat-family').textContent = user.familyMembers.length;
+  document.getElementById('stat-policies').textContent = user.policies.length;
+  document.getElementById('stat-vehicles').textContent = user.vehicles.length;
+}
+
+function renderApp(mobile) {
+  refreshHeaderAndStats(mobile);
+  selectNavByView('dashboard');
+}
+
+/* ---------------- Left nav ---------------- */
+function selectNav(el, view) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+  showView(view);
+}
+
+function selectNavByView(view) {
+  document.querySelectorAll('.nav-item').forEach(n => {
+    n.classList.toggle('active', n.dataset.view === view);
+  });
+  showView(view);
+}
+
+function showView(view) {
+  ['dashboard', 'family', 'policies', 'vehicles'].forEach(v => {
+    document.getElementById('view-' + v).classList.toggle('hidden', v !== view);
+  });
+  if (view === 'family') {
+    loadFamilyTable();
+  }
+  if (view === 'policies') {
+    loadPoliciesTable();
+  }
+  if (view === 'vehicles') {
+    loadVehiclesTable();
+  }
+}
+
+/* ---------------- My Family: editable table ---------------- */
+const RELATIONSHIP_OPTIONS = [
+  'Self', 'Spouse', 'Son', 'Daughter', 'Father', 'Mother', 'Brother', 'Sister',
+  'Doughter-in-law', 'Son-in-law', 'Uncle', 'Aunt', 'Cousin Sister', 'Cousin Brother'
+];
+
+function sortFamilyDraft() {
+  familyDraft.sort((a, b) => {
+    const aSelf = a.relationship === 'Self' ? 0 : 1;
+    const bSelf = b.relationship === 'Self' ? 0 : 1;
+    return aSelf - bSelf;
+  });
+}
+
+function calcAge(dob) {
+  if (!dob) return '';
+  const d = new Date(dob);
+  if (isNaN(d.getTime())) return '';
+  const today = new Date();
+  let age = today.getFullYear() - d.getFullYear();
+  const beforeBirthdayThisYear = (today.getMonth() < d.getMonth()) ||
+    (today.getMonth() === d.getMonth() && today.getDate() < d.getDate());
+  if (beforeBirthdayThisYear) age--;
+  return age >= 0 ? age : '';
+}
+
+function formatDateDMY(dob) {
+  if (!dob) return '';
+  const parts = dob.split('-');
+  if (parts.length !== 3) return '';
+  const [y, m, d] = parts;
+  return `${d}/${m}/${y}`;
+}
+
+function syncDateDisplay(nativeInput) {
+  const display = document.getElementById(nativeInput.id + '-display');
+  if (display) {
+    display.value = formatDateDMY(nativeInput.value) || 'dd/mm/yyyy';
+  }
+}
+
+let familyDraft = []; // working copy of family members while editing
+
+function loadFamilyTable() {
+  const mobile = localStorage.getItem(SESSION_KEY);
+  const user = findUser(mobile);
+  if (!user) return;
+
+  familyDraft = user.familyMembers.map(m => ({ ...m, _editing: false }));
+  sortFamilyDraft();
+  renderFamilyTable();
+}
+
+function renderFamilyTable() {
+  const tbody = document.getElementById('family-table-body');
+  tbody.innerHTML = '';
+
+  if (familyDraft.length === 0) {
+    familyDraft.push({ name: '', dob: '', relationship: '', mobile: '', livingTogether: '', _editing: true });
+  }
+
+  const profileMobile = localStorage.getItem(SESSION_KEY) || '';
+
+  familyDraft.forEach((member, idx) => {
+    const age = calcAge(member.dob);
+    const isSelf = member.relationship === 'Self';
+    if (isSelf) {
+      member.mobile = profileMobile;
+      member.livingTogether = 'NA';
+    }
+    const tr = document.createElement('tr');
+
+    if (member._editing) {
+      const relOptions = ['<option value="">Select</option>']
+        .concat(RELATIONSHIP_OPTIONS.map(r =>
+          `<option value="${r}"${member.relationship === r ? ' selected' : ''}>${r}</option>`
+        )).join('');
+
+      const livingOptions = ['Yes', 'No'].map(opt =>
+        `<option value="${opt}"${member.livingTogether === opt ? ' selected' : ''}>${opt}</option>`
+      ).join('');
+
+      const mobileCell = isSelf
+        ? `<input type="tel" value="${member.mobile || ''}" disabled placeholder="From profile">`
+        : `<input type="tel" maxlength="10" value="${member.mobile || ''}" oninput="updateFamilyField(${idx}, 'mobile', this.value)" placeholder="Mobile no.">`;
+
+      const livingCell = isSelf
+        ? `<input type="text" value="NA" disabled>`
+        : `<select onchange="updateFamilyField(${idx}, 'livingTogether', this.value)">
+            <option value="">Select</option>
+            ${livingOptions}
+          </select>`;
+
+      const actionsCell = isSelf
+        ? ``
+        : `<button type="button" class="remove-row-btn" title="Remove" onclick="requestDeleteRow('family', ${idx})">&times;</button>`;
+
+      tr.innerHTML = `
+        <td class="sr-col">${idx + 1}</td>
+        <td><input type="text" value="${member.name || ''}" oninput="updateFamilyField(${idx}, 'name', this.value)" placeholder="Full name"></td>
+        <td><input type="date" value="${member.dob || ''}" onchange="updateFamilyField(${idx}, 'dob', this.value)"></td>
+        <td><input type="text" value="${age}" disabled placeholder="Auto-calculated"></td>
+        <td>
+          <select onchange="updateFamilyField(${idx}, 'relationship', this.value)">
+            ${relOptions}
+          </select>
+        </td>
+        <td>${mobileCell}</td>
+        <td>${livingCell}</td>
+        <td>
+          <div class="row-actions">
+            ${actionsCell}
+          </div>
+        </td>
+      `;
+    } else {
+      const actionsCell = isSelf
+        ? ``
+        : `<button type="button" class="edit-row-btn" title="Update" onclick="toggleFamilyRowEdit(${idx})">&#9998;</button>
+           <button type="button" class="remove-row-btn" title="Remove" onclick="requestDeleteRow('family', ${idx})">&times;</button>`;
+
+      tr.innerHTML = `
+        <td class="sr-col">${idx + 1}</td>
+        <td class="display-text">${member.name || ''}</td>
+        <td class="display-text${member.dob ? '' : ' muted'}">${formatDateDMY(member.dob) || '-'}</td>
+        <td class="display-text${age !== '' ? '' : ' muted'}">${age !== '' ? age : '-'}</td>
+        <td class="display-text">${member.relationship || '-'}</td>
+        <td class="display-text${member.mobile ? '' : ' muted'}">${member.mobile || '-'}</td>
+        <td class="display-text">${member.livingTogether || '-'}</td>
+        <td>
+          <div class="row-actions">
+            ${actionsCell}
+          </div>
+        </td>
+      `;
+    }
+    tbody.appendChild(tr);
+  });
+}
+
+function toggleFamilyRowEdit(idx) {
+  familyDraft[idx]._editing = true;
+  renderFamilyTable();
+}
+
+function updateFamilyField(idx, field, value) {
+  familyDraft[idx][field] = value;
+  if (field === 'relationship' || field === 'dob') {
+    sortFamilyDraft();
+    renderFamilyTable();
+  }
+}
+
+function addFamilyRow() {
+  familyDraft.push({ name: '', dob: '', relationship: '', mobile: '', livingTogether: '', _editing: true });
+  renderFamilyTable();
+}
+
+function removeFamilyRow(idx) {
+  familyDraft.splice(idx, 1);
+  renderFamilyTable();
+}
+
+function cancelFamilyEdit() {
+  loadFamilyTable();
+  selectNavByView('dashboard');
+}
+
+function saveFamilyMembers() {
+  const cleaned = familyDraft.filter(m =>
+    (m.name && m.name.trim()) || m.dob || m.relationship || (m.mobile && m.mobile.trim()) || m.livingTogether
+  );
+
+  for (const m of cleaned) {
+    if (!m.name || !m.name.trim()) {
+      alert('Please enter a name for every family member row.');
+      return;
+    }
+    if (!m.relationship) {
+      alert('Please select a relationship for ' + m.name + '.');
+      return;
+    }
+    if (!m.livingTogether) {
+      alert('Please select "Living Together" (Yes/No) for ' + m.name + '.');
+      return;
+    }
+    if (m.mobile && !/^[0-9]{10}$/.test(m.mobile)) {
+      alert('Please enter a valid 10-digit mobile number for ' + m.name + ', or leave it blank.');
+      return;
+    }
+  }
+
+  cleaned.sort((a, b) => {
+    const aSelf = a.relationship === 'Self' ? 0 : 1;
+    const bSelf = b.relationship === 'Self' ? 0 : 1;
+    return aSelf - bSelf;
+  });
+
+  const mobile = localStorage.getItem(SESSION_KEY);
+  const db = loadDb();
+  const user = db.find(u => u.mobile === mobile);
+  if (!user) return;
+
+  user.familyMembers = cleaned.map(m => ({
+    name: m.name.trim(),
+    dob: m.dob || '',
+    relationship: m.relationship,
+    mobile: m.mobile || '',
+    livingTogether: m.livingTogether
+  }));
+  saveDb(db);
+
+  refreshHeaderAndStats(mobile);
+  loadFamilyTable();
+}
+
+/* ---------------- My Policies: editable table ---------------- */
+const POLICY_TYPE_OPTIONS = ['Life Insurance', 'Health Insurance'];
+const EMI_FREQUENCY_OPTIONS = ['Monthly', 'Quaterly', 'Half Yearly', 'Yearly', 'Single Premium'];
+
+let policiesDraft = []; // working copy of policies while editing
+
+function calcMaturityDate(startDate, policyTerm) {
+  if (!startDate || !policyTerm) return '';
+  const d = new Date(startDate);
+  if (isNaN(d.getTime())) return '';
+  d.setFullYear(d.getFullYear() + Number(policyTerm));
+  return d.toISOString().slice(0, 10);
+}
+
+function calcNextPremiumDate(startDate, emiFrequency) {
+  if (!startDate || !emiFrequency) return '';
+  if (emiFrequency === 'Single Premium') return 'N/A';
+
+  const monthsPerCycle = {
+    'Monthly': 1,
+    'Quaterly': 3,
+    'Half Yearly': 6,
+    'Yearly': 12
+  };
+  const interval = monthsPerCycle[emiFrequency];
+  if (!interval) return '';
+
+  let dueDate = new Date(startDate);
+  if (isNaN(dueDate.getTime())) return '';
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Roll the due date forward, cycle by cycle, until it lands in the
+  // current (or next upcoming) billing period relative to today.
+  while (dueDate < today) {
+    dueDate.setMonth(dueDate.getMonth() + interval);
+  }
+
+  return dueDate.toISOString().slice(0, 10);
+}
+
+function loadPoliciesTable() {
+  const mobile = localStorage.getItem(SESSION_KEY);
+  const user = findUser(mobile);
+  if (!user) return;
+
+  policiesDraft = user.policies.map(p => ({ ...p, _editing: false }));
+  renderPoliciesTable();
+}
+
+function renderPoliciesTable() {
+  const tbody = document.getElementById('policies-table-body');
+  tbody.innerHTML = '';
+
+  if (policiesDraft.length === 0) {
+    policiesDraft.push({ policyNo: '', bankName: '', policyType: '', startDate: '', policyTerm: '', payingTerm: '', emiFrequency: '', _editing: true });
+  }
+
+  policiesDraft.forEach((policy, idx) => {
+    const maturityDate = calcMaturityDate(policy.startDate, policy.policyTerm);
+    const nextPremiumDate = calcNextPremiumDate(policy.startDate, policy.emiFrequency);
+    const tr = document.createElement('tr');
+
+    if (policy._editing) {
+      const typeOptions = ['<option value="">Select</option>']
+        .concat(POLICY_TYPE_OPTIONS.map(t =>
+          `<option value="${t}"${policy.policyType === t ? ' selected' : ''}>${t}</option>`
+        )).join('');
+
+      const emiOptions = ['<option value="">Select</option>']
+        .concat(EMI_FREQUENCY_OPTIONS.map(f =>
+          `<option value="${f}"${policy.emiFrequency === f ? ' selected' : ''}>${f}</option>`
+        )).join('');
+
+      tr.innerHTML = `
+        <td class="sr-col">${idx + 1}</td>
+        <td><input type="text" value="${policy.policyNo || ''}" oninput="updatePolicyField(${idx}, 'policyNo', this.value)" placeholder="Policy no."></td>
+        <td><input type="text" value="${policy.bankName || ''}" oninput="updatePolicyField(${idx}, 'bankName', this.value)" placeholder="Bank name"></td>
+        <td>
+          <select onchange="updatePolicyField(${idx}, 'policyType', this.value)">
+            ${typeOptions}
+          </select>
+        </td>
+        <td>
+          <div class="date-field">
+            <input type="text" class="date-display" value="${formatDateDMY(policy.startDate) || 'dd/mm/yyyy'}" readonly>
+            <input type="date" class="date-native" value="${policy.startDate || ''}" onchange="updatePolicyField(${idx}, 'startDate', this.value)">
+          </div>
+        </td>
+        <td><input type="number" min="0" max="60" value="${policy.policyTerm ?? ''}" oninput="updatePolicyField(${idx}, 'policyTerm', this.value)" placeholder="Years"></td>
+        <td><input type="number" min="0" max="60" value="${policy.payingTerm ?? ''}" oninput="updatePolicyField(${idx}, 'payingTerm', this.value)" placeholder="Years"></td>
+        <td><input type="text" value="${formatDateDMY(maturityDate) || '-'}" disabled placeholder="Auto-calculated"></td>
+        <td>
+          <select onchange="updatePolicyField(${idx}, 'emiFrequency', this.value)">
+            ${emiOptions}
+          </select>
+        </td>
+        <td><input type="text" value="${nextPremiumDate === 'N/A' ? 'N/A' : (formatDateDMY(nextPremiumDate) || '-')}" disabled placeholder="Auto-calculated"></td>
+        <td>
+          <div class="row-actions">
+            <button type="button" class="remove-row-btn" title="Remove" onclick="requestDeleteRow('policy', ${idx})">&times;</button>
+          </div>
+        </td>
+      `;
+    } else {
+      tr.innerHTML = `
+        <td class="sr-col">${idx + 1}</td>
+        <td class="display-text">${policy.policyNo || '-'}</td>
+        <td class="display-text">${policy.bankName || '-'}</td>
+        <td class="display-text">${policy.policyType || '-'}</td>
+        <td class="display-text">${formatDateDMY(policy.startDate) || '-'}</td>
+        <td class="display-text">${policy.policyTerm || '-'}</td>
+        <td class="display-text">${policy.payingTerm || '-'}</td>
+        <td class="display-text${maturityDate ? '' : ' muted'}">${formatDateDMY(maturityDate) || '-'}</td>
+        <td class="display-text">${policy.emiFrequency || '-'}</td>
+        <td class="display-text${nextPremiumDate ? '' : ' muted'}">${nextPremiumDate === 'N/A' ? 'N/A' : (formatDateDMY(nextPremiumDate) || '-')}</td>
+        <td>
+          <div class="row-actions">
+            <button type="button" class="edit-row-btn" title="Update" onclick="togglePolicyRowEdit(${idx})">&#9998;</button>
+            <button type="button" class="remove-row-btn" title="Remove" onclick="requestDeleteRow('policy', ${idx})">&times;</button>
+          </div>
+        </td>
+      `;
+    }
+    tbody.appendChild(tr);
+  });
+}
+
+function togglePolicyRowEdit(idx) {
+  policiesDraft[idx]._editing = true;
+  renderPoliciesTable();
+}
+
+function updatePolicyField(idx, field, value) {
+  policiesDraft[idx][field] = value;
+  if (field === 'startDate' || field === 'policyTerm' || field === 'emiFrequency') {
+    renderPoliciesTable();
+  }
+}
+
+function addPolicyRow() {
+  policiesDraft.push({ policyNo: '', bankName: '', policyType: '', startDate: '', policyTerm: '', payingTerm: '', emiFrequency: '', _editing: true });
+  renderPoliciesTable();
+}
+
+function removePolicyRow(idx) {
+  policiesDraft.splice(idx, 1);
+  renderPoliciesTable();
+}
+
+function cancelPoliciesEdit() {
+  loadPoliciesTable();
+  selectNavByView('dashboard');
+}
+
+function savePolicies() {
+  const cleaned = policiesDraft.filter(p =>
+    (p.policyNo && p.policyNo.trim()) || (p.bankName && p.bankName.trim()) || p.policyType ||
+    p.startDate || p.policyTerm || p.payingTerm || p.emiFrequency
+  );
+
+  for (const p of cleaned) {
+    if (!p.policyNo || !p.policyNo.trim()) {
+      alert('Please enter a policy number for every policy row.');
+      return;
+    }
+    if (!p.bankName || !p.bankName.trim()) {
+      alert('Please enter a bank name for policy ' + p.policyNo + '.');
+      return;
+    }
+    if (!p.policyType) {
+      alert('Please select a policy type for ' + p.policyNo + '.');
+      return;
+    }
+    if (!p.startDate) {
+      alert('Please select a start date for ' + p.policyNo + '.');
+      return;
+    }
+    if (!p.policyTerm) {
+      alert('Please enter a policy term for ' + p.policyNo + '.');
+      return;
+    }
+    if (!p.payingTerm) {
+      alert('Please enter a paying term for ' + p.policyNo + '.');
+      return;
+    }
+    if (!p.emiFrequency) {
+      alert('Please select an EMI frequency for ' + p.policyNo + '.');
+      return;
+    }
+  }
+
+  const mobile = localStorage.getItem(SESSION_KEY);
+  const db = loadDb();
+  const user = db.find(u => u.mobile === mobile);
+  if (!user) return;
+
+  user.policies = cleaned.map(p => ({
+    policyNo: p.policyNo.trim(),
+    bankName: p.bankName.trim(),
+    policyType: p.policyType,
+    startDate: p.startDate,
+    policyTerm: Number(p.policyTerm),
+    payingTerm: Number(p.payingTerm),
+    emiFrequency: p.emiFrequency
+  }));
+  saveDb(db);
+
+  refreshHeaderAndStats(mobile);
+  loadPoliciesTable();
+}
+
+/* ---------------- My Vehicles: editable table ---------------- */
+const VEHICLE_TYPE_OPTIONS = ['Car', 'Bike', 'Scooty'];
+const RTO_REGNO_PATTERN = /^[A-Z]{2}[0-9]{1,2}[A-Z]{1,3}[0-9]{4}$/;
+
+const VEHICLE_MAKE_OPTIONS = [
+  'Maruti Suzuki', 'Hyundai', 'Tata Motors', 'Mahindra & Mahindra', 'Kia',
+  'Toyota Kirloskar', 'Honda Cars India', 'Honda Motorcycle & Scooter India (HMSI)',
+  'Renault India', 'Nissan Motor India',
+  'Volkswagen India', 'Skoda Auto India', 'MG Motor India', 'Citroen India',
+  'Jeep India', 'Force Motors', 'Premier Limited', 'BYD India',
+  'Hero MotoCorp', 'Bajaj Auto', 'TVS Motor Company', 'Royal Enfield',
+  'Yamaha Motor India', 'Suzuki Motorcycle India', 'KTM India',
+  'Harley-Davidson India', 'Ather Energy', 'Ola Electric', 'Okinawa Autotech',
+  'Ashok Leyland', 'Eicher Motors'
+];
+
+function getVehicleModelYearOptions() {
+  const currentYear = new Date().getFullYear();
+  const years = [];
+  for (let y = currentYear + 1; y >= 1990; y--) {
+    years.push(y);
+  }
+  return years;
+}
+
+let vehiclesDraft = []; // working copy of vehicles while editing
+
+function loadVehiclesTable() {
+  const mobile = localStorage.getItem(SESSION_KEY);
+  const user = findUser(mobile);
+  if (!user) return;
+
+  vehiclesDraft = user.vehicles.map(v => ({ ...v, _editing: false }));
+  renderVehiclesTable();
+}
+
+function renderVehiclesTable() {
+  const tbody = document.getElementById('vehicles-table-body');
+  tbody.innerHTML = '';
+
+  if (vehiclesDraft.length === 0) {
+    vehiclesDraft.push({ regNo: '', vehicleType: '', make: '', model: '', insurancePolicy: '', pollutionUpto: '', _editing: true });
+  }
+
+  const modelYears = getVehicleModelYearOptions();
+
+  vehiclesDraft.forEach((vehicle, idx) => {
+    const tr = document.createElement('tr');
+
+    if (vehicle._editing) {
+      const typeOptions = ['<option value="">Select</option>']
+        .concat(VEHICLE_TYPE_OPTIONS.map(t =>
+          `<option value="${t}"${vehicle.vehicleType === t ? ' selected' : ''}>${t}</option>`
+        )).join('');
+
+      const modelOptions = ['<option value="">Select</option>']
+        .concat(modelYears.map(y =>
+          `<option value="${y}"${Number(vehicle.model) === y ? ' selected' : ''}>${y}</option>`
+        )).join('');
+
+      const makeOptions = ['<option value="">Select</option>']
+        .concat(VEHICLE_MAKE_OPTIONS.map(mk =>
+          `<option value="${mk}"${vehicle.make === mk ? ' selected' : ''}>${mk}</option>`
+        )).join('');
+
+      tr.innerHTML = `
+        <td class="sr-col">${idx + 1}</td>
+        <td><input type="text" value="${vehicle.regNo || ''}" oninput="updateVehicleField(${idx}, 'regNo', this.value.toUpperCase())" placeholder="e.g. MH12AB1234" style="text-transform:uppercase;"></td>
+        <td>
+          <select onchange="updateVehicleField(${idx}, 'vehicleType', this.value)">
+            ${typeOptions}
+          </select>
+        </td>
+        <td>
+          <select onchange="updateVehicleField(${idx}, 'make', this.value)">
+            ${makeOptions}
+          </select>
+        </td>
+        <td>
+          <select onchange="updateVehicleField(${idx}, 'model', this.value)">
+            ${modelOptions}
+          </select>
+        </td>
+        <td><input type="text" value="${vehicle.insurancePolicy || ''}" oninput="updateVehicleField(${idx}, 'insurancePolicy', this.value)" placeholder="Policy no."></td>
+        <td>
+          <div class="date-field">
+            <input type="text" class="date-display" value="${formatDateDMY(vehicle.pollutionUpto) || 'dd/mm/yyyy'}" readonly>
+            <input type="date" class="date-native" value="${vehicle.pollutionUpto || ''}" onchange="updateVehicleField(${idx}, 'pollutionUpto', this.value)">
+            <span class="date-icon">&#128197;</span>
+          </div>
+        </td>
+        <td>
+          <div class="row-actions">
+            <button type="button" class="remove-row-btn" title="Remove" onclick="requestDeleteRow('vehicle', ${idx})">&times;</button>
+          </div>
+        </td>
+      `;
+    } else {
+      tr.innerHTML = `
+        <td class="sr-col">${idx + 1}</td>
+        <td class="display-text">${vehicle.regNo || '-'}</td>
+        <td class="display-text">${vehicle.vehicleType || '-'}</td>
+        <td class="display-text">${vehicle.make || '-'}</td>
+        <td class="display-text">${vehicle.model || '-'}</td>
+        <td class="display-text${vehicle.insurancePolicy ? '' : ' muted'}">${vehicle.insurancePolicy || '-'}</td>
+        <td class="display-text${vehicle.pollutionUpto ? '' : ' muted'}">${formatDateDMY(vehicle.pollutionUpto) || '-'}</td>
+        <td>
+          <div class="row-actions">
+            <button type="button" class="edit-row-btn" title="Update" onclick="toggleVehicleRowEdit(${idx})">&#9998;</button>
+            <button type="button" class="remove-row-btn" title="Remove" onclick="requestDeleteRow('vehicle', ${idx})">&times;</button>
+          </div>
+        </td>
+      `;
+    }
+    tbody.appendChild(tr);
+  });
+}
+
+function toggleVehicleRowEdit(idx) {
+  vehiclesDraft[idx]._editing = true;
+  renderVehiclesTable();
+}
+
+function updateVehicleField(idx, field, value) {
+  vehiclesDraft[idx][field] = value;
+  if (field === 'pollutionUpto') {
+    renderVehiclesTable();
+  }
+}
+
+function addVehicleRow() {
+  vehiclesDraft.push({ regNo: '', vehicleType: '', make: '', model: '', insurancePolicy: '', pollutionUpto: '', _editing: true });
+  renderVehiclesTable();
+}
+
+function removeVehicleRow(idx) {
+  vehiclesDraft.splice(idx, 1);
+  renderVehiclesTable();
+}
+
+function cancelVehiclesEdit() {
+  loadVehiclesTable();
+  selectNavByView('dashboard');
+}
+
+function saveVehicles() {
+  const cleaned = vehiclesDraft.filter(v =>
+    (v.regNo && v.regNo.trim()) || v.vehicleType || (v.make && v.make.trim()) || v.model ||
+    (v.insurancePolicy && v.insurancePolicy.trim()) || v.pollutionUpto
+  );
+
+  for (const v of cleaned) {
+    if (!v.regNo || !v.regNo.trim()) {
+      alert('Please enter a registration number for every vehicle row.');
+      return;
+    }
+    if (!RTO_REGNO_PATTERN.test(v.regNo.trim().toUpperCase())) {
+      alert('Please enter a valid Indian RTO registration number for ' + v.regNo + ' (e.g. MH12AB1234).');
+      return;
+    }
+    if (!v.vehicleType) {
+      alert('Please select a vehicle type for ' + v.regNo + '.');
+      return;
+    }
+    if (!v.make || !v.make.trim()) {
+      alert('Please enter the make for ' + v.regNo + '.');
+      return;
+    }
+    if (!v.model) {
+      alert('Please select a model year for ' + v.regNo + '.');
+      return;
+    }
+  }
+
+  const mobile = localStorage.getItem(SESSION_KEY);
+  const db = loadDb();
+  const user = db.find(u => u.mobile === mobile);
+  if (!user) return;
+
+  user.vehicles = cleaned.map(v => ({
+    regNo: v.regNo.trim().toUpperCase(),
+    vehicleType: v.vehicleType,
+    make: v.make.trim(),
+    model: Number(v.model),
+    insurancePolicy: v.insurancePolicy || '',
+    pollutionUpto: v.pollutionUpto || ''
+  }));
+  saveDb(db);
+
+  refreshHeaderAndStats(mobile);
+  loadVehiclesTable();
+}
+
+/* ---------------- Profile popup actions ---------------- */
+function openUpdateProfile() {
+  const mobile = localStorage.getItem(SESSION_KEY);
+  const user = findUser(mobile);
+  if (!user) return;
+
+  document.getElementById('up-name').value = user.name;
+  document.getElementById('up-email').value = user.email;
+  document.getElementById('up-mobile').value = user.mobile;
+  document.getElementById('up-dob').value = user.dob || '';
+  document.getElementById('up-dob-display').value = formatDateDMY(user.dob) || 'dd/mm/yyyy';
+  document.getElementById('modal-update-profile').classList.remove('hidden');
+}
+
+function closeUpdateProfile() {
+  document.getElementById('modal-update-profile').classList.add('hidden');
+}
+
+function saveUpdateProfile() {
+  const mobile = localStorage.getItem(SESSION_KEY);
+  const db = loadDb();
+  const user = db.find(u => u.mobile === mobile);
+  if (!user) return;
+
+  const newName = document.getElementById('up-name').value.trim();
+  const newEmail = document.getElementById('up-email').value.trim();
+  const newDob = document.getElementById('up-dob').value;
+
+  if (!newName || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+    alert('Please enter a valid name and email.');
+    return;
+  }
+
+  user.name = newName;
+  user.email = newEmail;
+  user.dob = newDob || '';
+  saveDb(db);
+  closeUpdateProfile();
+  renderApp(mobile);
+}
+
+function signOut() {
+  localStorage.removeItem(SESSION_KEY);
+  document.getElementById('screen-app').classList.add('hidden');
+  document.getElementById('screen-onboarding').classList.add('hidden');
+  document.getElementById('screen-login').classList.remove('hidden');
+
+  document.getElementById('login-step-otp').classList.add('hidden');
+  document.getElementById('login-step-mobile').classList.remove('hidden');
+  document.getElementById('login-mobile').value = '';
+  document.getElementById('login-mobile-error').textContent = '';
+  pendingMobile = null;
+}
+
+/* ---------------- Confirm Delete ---------------- */
+let pendingDelete = null; // { type: 'family' | 'policy' | 'vehicle', idx }
+
+function requestDeleteRow(type, idx) {
+  pendingDelete = { type, idx };
+  const labels = { family: 'family member', policy: 'policy', vehicle: 'vehicle' };
+  document.getElementById('confirm-delete-message').textContent =
+    `Are you sure you want to delete this ${labels[type] || 'row'}?`;
+  document.getElementById('modal-confirm-delete').classList.remove('hidden');
+}
+
+function cancelDeleteRow() {
+  pendingDelete = null;
+  document.getElementById('modal-confirm-delete').classList.add('hidden');
+}
+
+function confirmDeleteRow() {
+  if (!pendingDelete) return;
+  const { type, idx } = pendingDelete;
+  if (type === 'family') {
+    removeFamilyRow(idx);
+  } else if (type === 'policy') {
+    removePolicyRow(idx);
+  } else if (type === 'vehicle') {
+    removeVehicleRow(idx);
+  }
+  pendingDelete = null;
+  document.getElementById('modal-confirm-delete').classList.add('hidden');
+}
+
+/* ---------------- Export (Excel / PDF) ---------------- */
+let exportContext = null; // 'family' or 'policies'
+
+function openExportModal(context) {
+  exportContext = context;
+  document.getElementById('modal-export').classList.remove('hidden');
+}
+
+function closeExportModal() {
+  document.getElementById('modal-export').classList.add('hidden');
+  exportContext = null;
+}
+
+function runExport(format) {
+  if (exportContext === 'family') {
+    exportFamilyData(format);
+  } else if (exportContext === 'policies') {
+    exportPoliciesData(format);
+  } else if (exportContext === 'vehicles') {
+    exportVehiclesData(format);
+  }
+  closeExportModal();
+}
+
+function buildFamilyExportRows() {
+  const mobile = localStorage.getItem(SESSION_KEY);
+  const user = findUser(mobile);
+  if (!user) return [];
+
+  return user.familyMembers.map((m, idx) => ({
+    'Sr#': idx + 1,
+    'Name': m.name || '',
+    'Date of Birth': formatDateDMY(m.dob) || '',
+    'Age': calcAge(m.dob),
+    'Relationship': m.relationship || '',
+    'Mobile No.': m.mobile || '',
+    'Living Together': m.livingTogether || ''
+  }));
+}
+
+function buildPoliciesExportRows() {
+  const mobile = localStorage.getItem(SESSION_KEY);
+  const user = findUser(mobile);
+  if (!user) return [];
+
+  return user.policies.map((p, idx) => {
+    const maturityDate = calcMaturityDate(p.startDate, p.policyTerm);
+    const nextPremiumDate = calcNextPremiumDate(p.startDate, p.emiFrequency);
+    return {
+      'Sr#': idx + 1,
+      'Policy No.': p.policyNo || '',
+      'Bank Name': p.bankName || '',
+      'Policy Type': p.policyType || '',
+      'Start Date': formatDateDMY(p.startDate) || '',
+      'Policy Term (yrs)': p.policyTerm || '',
+      'Paying Term (yrs)': p.payingTerm || '',
+      'Maturity Date': formatDateDMY(maturityDate) || '',
+      'EMI Frequency': p.emiFrequency || '',
+      'Next Premium Date': nextPremiumDate === 'N/A' ? 'N/A' : (formatDateDMY(nextPremiumDate) || '')
+    };
+  });
+}
+
+function exportRowsAsExcel(rows, fileName, sheetName) {
+  const worksheet = XLSX.utils.json_to_sheet(rows);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+  XLSX.writeFile(workbook, fileName);
+}
+
+function exportRowsAsPdf(rows, fileName, title) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'landscape' });
+  doc.text(title, 14, 16);
+
+  if (rows.length > 0) {
+    const columns = Object.keys(rows[0]);
+    const body = rows.map(row => columns.map(col => String(row[col])));
+    doc.autoTable({
+      head: [columns],
+      body: body,
+      startY: 22,
+      styles: { fontSize: 8 }
+    });
+  }
+
+  doc.save(fileName);
+}
+
+function exportFamilyData(format) {
+  const rows = buildFamilyExportRows();
+  if (format === 'excel') {
+    exportRowsAsExcel(rows, 'My_Family.xlsx', 'My Family');
+  } else {
+    exportRowsAsPdf(rows, 'My_Family.pdf', 'My Family');
+  }
+}
+
+function exportPoliciesData(format) {
+  const rows = buildPoliciesExportRows();
+  if (format === 'excel') {
+    exportRowsAsExcel(rows, 'My_Policies.xlsx', 'My Policies');
+  } else {
+    exportRowsAsPdf(rows, 'My_Policies.pdf', 'My Policies');
+  }
+}
+
+function buildVehiclesExportRows() {
+  const mobile = localStorage.getItem(SESSION_KEY);
+  const user = findUser(mobile);
+  if (!user) return [];
+
+  return user.vehicles.map((v, idx) => ({
+    'Sr#': idx + 1,
+    'Registration No.': v.regNo || '',
+    'Vehicle Type': v.vehicleType || '',
+    'Make': v.make || '',
+    'Model (Year)': v.model || '',
+    'Insurance Policy': v.insurancePolicy || '',
+    'Pollution Certificate Upto': formatDateDMY(v.pollutionUpto) || ''
+  }));
+}
+
+function exportVehiclesData(format) {
+  const rows = buildVehiclesExportRows();
+  if (format === 'excel') {
+    exportRowsAsExcel(rows, 'My_Vehicles.xlsx', 'My Vehicles');
+  } else {
+    exportRowsAsPdf(rows, 'My_Vehicles.pdf', 'My Vehicles');
+  }
+}
+
+/* ---------------- Init: restore session if present ---------------- */
+(function init() {
+  loadDb();
+  const mobile = localStorage.getItem(SESSION_KEY);
+  if (mobile && findUser(mobile)) {
+    document.getElementById('screen-login').classList.add('hidden');
+    document.getElementById('screen-app').classList.remove('hidden');
+    renderApp(mobile);
+  }
+})();
+</script>
+
+<!-- Export libraries (Excel + PDF) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+</body>
+</html>

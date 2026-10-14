@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyBox Portal - API Specification</title>
+<style>
+  :root {
+    --primary: #2563eb;
+    --primary-dark: #1d4ed8;
+    --bg: #f3f4f6;
+    --card-bg: #ffffff;
+    --border: #e5e7eb;
+    --text: #111827;
+    --muted: #6b7280;
+    --code-bg: #0f172a;
+    --code-text: #e2e8f0;
+    --get: #0369a1;
+    --post: #15803d;
+    --put: #b45309;
+    --delete: #b91c1c;
+    --warn-bg: #fff7ed;
+    --warn-border: #fdba74;
+    --warn-text: #9a3412;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header {
+    background: #111827;
+    color: #fff;
+    padding: 32px 40px;
+  }
+  header h1 { margin: 0 0 6px; font-size: 24px; }
+  header p { margin: 0; color: #cbd5e1; font-size: 14px; }
+
+  .wrap { max-width: 1140px; margin: 0 auto; padding: 32px 24px 60px; }
+  nav.toc {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin-bottom: 32px;
+    font-size: 13.5px;
+  }
+  nav.toc strong { display: block; margin-bottom: 8px; font-size: 13px; text-transform: uppercase; color: var(--muted); letter-spacing: .04em; }
+  nav.toc ul { columns: 2; margin: 0; padding-left: 18px; }
+  nav.toc a { color: var(--primary); text-decoration: none; }
+  nav.toc a:hover { text-decoration: underline; }
+
+  h2 {
+    font-size: 19px;
+    margin: 44px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--border);
+    scroll-margin-top: 20px;
+  }
+  h2:first-of-type { margin-top: 0; }
+  h3 {
+    font-size: 15px;
+    margin: 28px 0 10px;
+    scroll-margin-top: 20px;
+  }
+  p.lede {
+    color: var(--muted);
+    font-size: 14px;
+    line-height: 1.6;
+    max-width: 800px;
+  }
+
+  .arch-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    align-items: stretch;
+    margin: 18px 0;
+  }
+  .arch-box {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    text-align: center;
+    font-size: 13.5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+  }
+  .arch-box .arch-title { font-weight: 700; font-size: 14px; }
+  .arch-box .arch-sub { color: var(--muted); font-size: 12.5px; }
+  .arch-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    font-size: 20px;
+    font-weight: 700;
+  }
+  @media (max-width: 760px) {
+    .arch-grid { grid-template-columns: 1fr; }
+    .arch-arrow { transform: rotate(90deg); }
+  }
+
+  table.plain {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  table.plain th, table.plain td {
+    padding: 9px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  table.plain th {
+    background: #f9fafb;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: var(--muted);
+  }
+  table.plain td.mono, table.plain th.mono { font-family: 'Consolas', monospace; white-space: nowrap; }
+  table.plain tr:last-child td { border-bottom: none; }
+
+  .endpoint-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 20px;
+    overflow: hidden;
+  }
+  .endpoint-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .method-badge {
+    font-family: 'Consolas', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    padding: 3px 9px;
+    border-radius: 5px;
+    letter-spacing: .03em;
+  }
+  .method-get { background: var(--get); }
+  .method-post { background: var(--post); }
+  .method-put { background: var(--put); }
+  .method-delete { background: var(--delete); }
+  .endpoint-path {
+    font-family: 'Consolas', monospace;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .endpoint-auth {
+    margin-left: auto;
+    font-size: 11.5px;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 2px 10px;
+  }
+  .endpoint-body { padding: 16px 18px; }
+  .endpoint-body p.desc { margin: 0 0 14px; font-size: 13.5px; color: var(--text); }
+  .endpoint-body h4 {
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--muted);
+    margin: 16px 0 6px;
+  }
+  .endpoint-body h4:first-of-type { margin-top: 0; }
+
+  pre {
+    background: var(--code-bg);
+    color: var(--code-text);
+    padding: 14px 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 12.5px;
+    line-height: 1.55;
+    font-family: 'Consolas', 'Courier New', monospace;
+    margin: 0;
+  }
+  code.inline {
+    font-family: 'Consolas', monospace;
+    background: #eef2ff;
+    color: #3730a3;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12.5px;
+  }
+
+  .note-box {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-size: 13.5px;
+    color: #1e3a8a;
+    margin: 14px 0;
+  }
+  .warn-box {
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-border);
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-size: 13.5px;
+    color: var(--warn-text);
+    margin: 14px 0;
+  }
+  .warn-box strong { display: block; margin-bottom: 4px; }
+
+  ol.steps, ul.plainlist {
+    font-size: 13.5px;
+    line-height: 1.7;
+    padding-left: 22px;
+    margin: 10px 0;
+  }
+  .status-grid {
+    display: grid;
+    grid-template-columns: 70px 1fr;
+    gap: 4px 14px;
+    font-size: 13px;
+  }
+  .status-grid .code { font-family: 'Consolas', monospace; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>MyBox Portal &mdash; API Specification</h1>
+  <p>REST API contract for a Node.js (Express) backend and PostgreSQL "MyBox" schema, consumed by a React single-page app. Derived from the MyBox.html prototype's functional flow and MyBox-database-schema.html / MyBox-database.sql.</p>
+</header>
+
+<div class="wrap">
+
+  <nav class="toc">
+    <strong>Contents</strong>
+    <ul>
+      <li><a href="#overview">1. Overview &amp; Architecture</a></li>
+      <li><a href="#conventions">2. API Conventions</a></li>
+      <li><a href="#auth">3. Authentication &amp; OTP</a></li>
+      <li><a href="#profile">4. Profile</a></li>
+      <li><a href="#family">5. My Family</a></li>
+      <li><a href="#policies">6. My Policies</a></li>
+      <li><a href="#vehicles">7. My Vehicles</a></li>
+      <li><a href="#dashboard">8. Dashboard Summary</a></li>
+      <li><a href="#validation">9. Validation Reference</a></li>
+      <li><a href="#errors">10. Error Codes</a></li>
+      <li><a href="#notes">11. Implementation Notes</a></li>
+      <li><a href="#react">12. React Frontend Integration</a></li>
+    </ul>
+  </nav>
+
+  <!-- ============================================================ -->
+  <h2 id="overview">1. Overview &amp; Architecture</h2>
+  <p class="lede">
+    MyBox.html is currently a client-only prototype that keeps all data in <code class="inline">localStorage</code>.
+    This specification defines the REST API needed to move that same functional flow &mdash; mobile/OTP login,
+    onboarding, Dashboard, My Family, My Policies, My Vehicles, Update Profile, Sign Out and Export &mdash; onto a
+    real Node.js backend backed by the PostgreSQL <code class="inline">MyBox</code> schema described in
+    MyBox-database-schema.html / MyBox-database.sql.
+  </p>
+
+  <div class="arch-grid">
+    <div class="arch-box">
+      <div class="arch-title">React SPA</div>
+      <div class="arch-sub">Login &middot; Onboarding &middot; Dashboard &middot; My Family / Policies / Vehicles &middot; Profile</div>
+    </div>
+    <div class="arch-arrow">&#8596;</div>
+    <div class="arch-box">
+      <div class="arch-title">Node.js / Express API</div>
+      <div class="arch-sub">JWT auth &middot; validation &middot; business rules &middot; computed fields</div>
+    </div>
+  </div>
+  <div class="arch-grid" style="grid-template-columns: 1fr auto 1fr;">
+    <div></div>
+    <div class="arch-arrow">&#8596;</div>
+    <div class="arch-box">
+      <div class="arch-title">PostgreSQL &mdash; schema "MyBox"</div>
+      <div class="arch-sub">users &middot; family_members &middot; policies &middot; vehicles &middot; v_family_members &middot; v_policies</div>
+    </div>
+  </div>
+
+  <h3>Tech stack</h3>
+  <table class="plain">
+    <tr><th>Layer</th><th>Choice</th><th>Notes</th></tr>
+    <tr><td>Frontend</td><td class="mono">React 18 + React Router</td><td>SPA mirroring the screens in MyBox.html</td></tr>
+    <tr><td>HTTP client</td><td class="mono">fetch / axios</td><td>Thin service layer attaching the JWT bearer token</td></tr>
+    <tr><td>Backend runtime</td><td class="mono">Node.js 20 LTS</td><td>&ndash;</td></tr>
+    <tr><td>Backend framework</td><td class="mono">Express 4</td><td>Routing, middleware, JSON body parsing</td></tr>
+    <tr><td>Database driver</td><td class="mono">pg / Knex (or Prisma)</td><td>Parameterized queries against schema <code class="inline">MyBox</code></td></tr>
+    <tr><td>Auth</td><td class="mono">JWT (HS256)</td><td>Issued after OTP verification; short-lived access token</td></tr>
+    <tr><td>Validation</td><td class="mono">zod / joi</td><td>Server-side mirror of the client-side rules in MyBox.html</td></tr>
+  </table>
+
+  <!-- ============================================================ -->
+  <h2 id="conventions">2. API Conventions</h2>
+  <table class="plain">
+    <tr><th>Item</th><th>Value</th></tr>
+    <tr><td>Base URL</td><td class="mono">/api/v1</td></tr>
+    <tr><td>Format</td><td>JSON request/response bodies, UTF-8</td></tr>
+    <tr><td>Auth header</td><td class="mono">Authorization: Bearer &lt;token&gt;</td></tr>
+    <tr><td>Dates</td><td>Wire format is ISO <code class="inline">YYYY-MM-DD</code> (matches native <code class="inline">&lt;input type="date"&gt;</code> values in MyBox.html). The React UI is responsible for the DD/MM/YYYY display formatting &mdash; the API never sends or accepts DD/MM/YYYY.</td></tr>
+    <tr><td>IDs</td><td>Database <code class="inline">BIGSERIAL</code> surfaced to clients as JSON numbers</td></tr>
+  </table>
+
+  <h3>Success envelope</h3>
+  <pre>{
+  "data": { ... }        // or [ ... ] for list endpoints
+}</pre>
+
+  <h3>Error envelope</h3>
+  <pre>{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Please enter a valid 10-digit mobile number.",
+    "fields": { "mobile": "Must be exactly 10 digits" }   // optional, field-level detail
+  }
+}</pre>
+
+  <!-- ============================================================ -->
+  <h2 id="auth">3. Authentication &amp; OTP</h2>
+  <p class="lede">
+    Mirrors the two-step login in MyBox.html (<code class="inline">sendOtp()</code> /
+    <code class="inline">verifyOtp()</code>). The prototype accepts a hardcoded OTP (<code class="inline">123456</code>);
+    in the real API this is replaced by a generated, time-limited OTP delivered via SMS (see
+    <a href="#notes">Implementation Notes</a> for the storage table this requires).
+  </p>
+
+  <ol class="steps">
+    <li>User enters a 10-digit mobile number &rarr; <code class="inline">POST /auth/otp/send</code>.</li>
+    <li>User enters the 6-digit OTP &rarr; <code class="inline">POST /auth/otp/verify</code>.</li>
+    <li>If the mobile number already has a profile, the API returns a JWT and the user record (equivalent to
+        <code class="inline">startSession()</code>) and the SPA routes straight to the Dashboard.</li>
+    <li>If the mobile number has no profile, the API returns <code class="inline">exists: false</code> and the SPA
+        routes to the onboarding form; submitting it calls <code class="inline">POST /profile</code>, which creates
+        the user <em>and</em> auto-seeds the "Self" family member row, then returns a JWT.</li>
+  </ol>
+
+  <div class="endpoint-card">
+    <div class="endpoint-head">
+      <span class="method-badge method-post">POST</span>
+      <span class="endpoint-path">/auth/otp/send</span>
+      <span class="endpoint-auth">No auth</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="desc">Generates and dispatches an OTP for the given mobile number. Equivalent to the client-side <code class="inline">sendOtp()</code> validation plus a real SMS dispatch.</p>
+      <h4>Request body</h4>
+      <pre>{ "mobile": "9876543210" }</pre>
+      <h4>Response 200</h4>
+      <pre>{
+  "data": {
+    "mobile": "9876543210",
+    "otpExpiresInSeconds": 300
+  }
+}</pre>
+      <h4>Errors</h4>
+      <pre>400 VALIDATION_ERROR   -- mobile is not exactly 10 digits
+429 RATE_LIMITED        -- too many OTP requests for this mobile in a short window</pre>
+    </div>
+  </div>
+
+  <div class="endpoint-card">
+    <div class="endpoint-head">
+      <span class="method-badge method-post">POST</span>
+      <span class="endpoint-path">/auth/otp/verify</span>
+      <span class="endpoint-auth">No auth</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="desc">Verifies the OTP. Returns whether a profile already exists for the mobile number, and a JWT when one does &mdash; letting the SPA decide between "go to Dashboard" and "go to onboarding", exactly like <code class="inline">verifyOtp()</code> in MyBox.html.</p>
+      <h4>Request body</h4>
+      <pre>{ "mobile": "9876543210", "otp": "123456" }</pre>
+      <h4>Response 200 &mdash; existing user</h4>
+      <pre>{
+  "data": {
+    "exists": true,
+    "token": "eyJhbGciOiJIUzI1NiIs...",
+    "user": {
+      "id": 1,
+      "mobile": "9999999999",
+      "name": "Maneesh Sharma",
+      "email": "maneesh.sharma@redzonelabs.in",
+      "dateOfBirth": "1985-05-10"
+    }
+  }
+}</pre>
+      <h4>Response 200 &mdash; new mobile number</h4>
+      <pre>{ "data": { "exists": false } }</pre>
+      <h4>Errors</h4>
+      <pre>400 VALIDATION_ERROR   -- malformed mobile/OTP
+401 INVALID_OTP        -- OTP incorrect or expired</pre>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="profile">4. Profile</h2>
+  <p class="lede">Covers onboarding (<code class="inline">completeOnboarding()</code>) and the Update Profile modal (<code class="inline">openUpdateProfile()</code> / <code class="inline">saveUpdateProfile()</code>).</p>
+
+  <div class="endpoint-card">
+    <div class="endpoint-head">
+      <span class="method-badge method-post">POST</span>
+      <span class="endpoint-path">/profile</span>
+      <span class="endpoint-auth">No auth (uses verified-mobile token)</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="desc">Creates the user profile after a brand-new mobile number passes OTP verification. The mobile number itself is taken from the OTP-verification step, never re-typed by the client. Automatically seeds exactly one "Self" family member row from this same data (name, date of birth, mobile), with <code class="inline">livingTogether = "NA"</code> &mdash; matching <code class="inline">completeOnboarding()</code>.</p>
+      <h4>Request body</h4>
+      <pre>{
+  "name": "Jane Doe",
+  "email": "jane@example.com",
+  "dateOfBirth": "1990-02-18"
+}</pre>
+      <h4>Response 201</h4>
+      <pre>{
+  "data": {
+    "token": "eyJhbGciOiJIUzI1NiIs...",
+    "user": {
+      "id": 7,
+      "mobile": "9876500000",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "dateOfBirth": "1990-02-18"
+    }
+  }
+}</pre>
+      <h4>Errors</h4>
+      <pre>400 VALIDATION_ERROR   -- name blank / email invalid / dateOfBirth malformed
+409 ALREADY_EXISTS      -- a profile already exists for this mobile number</pre>
+    </div>
+  </div>
+
+  <div class="endpoint-card">
+    <div class="endpoint-head">
+      <span class="method-badge method-get">GET</span>
+      <span class="endpoint-path">/profile</span>
+      <span class="endpoint-auth">Bearer token</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="desc">Returns the signed-in user's profile. Used to populate the topbar, the Update Profile modal, and the "from profile" Mobile No. / data shown on the Self family row.</p>
+      <h4>Response 200</h4>
+      <pre>{
+  "data": {
+    "id": 1,
+    "mobile": "9999999999",
+    "name": "Maneesh Sharma",
+    "email": "maneesh.sharma@redzonelabs.in",
+    "dateOfBirth": "1985-05-10"
+  }
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint-card">
+    <div class="endpoint-head">
+      <span class="method-badge method-put">PUT</span>
+      <span class="endpoint-path">/profile</span>
+      <span class="endpoint-auth">Bearer token</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="desc">Updates name / email / date of birth (mobile number is immutable &mdash; it is the login identity). Equivalent to <code class="inline">saveUpdateProfile()</code>. Because the Self family row mirrors the profile, the API also re-syncs that row's name, date of birth and mobile in the same transaction.</p>
+      <h4>Request body</h4>
+      <pre>{
+  "name": "Maneesh Sharma",
+  "email": "maneesh.sharma@redzonelabs.in",
+  "dateOfBirth": "1985-05-10"
+}</pre>
+      <h4>Response 200</h4>
+      <pre>{ "data": { "id": 1, "mobile": "9999999999", "name": "Maneesh Sharma",
+             "email": "maneesh.sharma@redzonelabs.in", "dateOfBirth": "1985-05-10" } }</pre>
+      <h4>Errors</h4>
+      <pre>400 VALIDATION_ERROR   -- name blank / email invalid</pre>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="family">5. My Family</h2>
+  <p class="lede">
+    MyBox.html edits the whole family list in the browser (<code class="inline">familyDraft</code>) and only talks to
+    storage once, when <strong>Save</strong> is clicked, replacing the entire collection. The API mirrors that
+    exactly with a single bulk endpoint, so the React Save/Cancel buttons map 1:1 to <em>one</em> network call each
+    (Cancel never calls the API &mdash; it just re-fetches/discards local state).
+  </p>
+
+  <div class="endpoint-card">
+    <div class="endpoint-head">
+      <span class="method-badge method-get">GET</span>
+      <span class="endpoint-path">/family-members</span>
+      <span class="endpoint-auth">Bearer token</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="desc">Returns all family members for the signed-in user, Self row first, with <code class="inline">age</code> computed server-side from <code class="inline">v_family_members</code> (same logic as the client's <code class="inline">calcAge()</code>).</p>
+      <h4>Response 200</h4>
+      <pre>{
+  "data": [
+    {
+      "id": 11, "name": "Maneesh Sharma", "dateOfBirth": "1985-05-10", "age": 41,
+      "relationship": "Self", "mobile": "9999999999", "livingTogether": "NA", "isSelf": true
+    },
+    {
+      "id": 12, "name": "Priya Sharma", "dateOfBirth": "1988-03-15", "age": 38,
+      "relationship": "Spouse", "mobile": "9876543210", "livingTogether": "Yes", "isSelf": false
+    }
+  ]
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint-card">
+    <div class="endpoint-head">
+      <span class="method-badge method-put">PUT</span>
+      <span class="endpoint-path">/family-members</span>
+      <span class="endpoint-auth">Bearer token</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="desc">
+        Replaces the user's entire family member list in one transaction &mdash; matching <code class="inline">saveFamilyMembers()</code>,
+        which filters out blank rows, validates, then overwrites <code class="inline">user.familyMembers</code>.
+        Send every row currently in the table (new rows without an <code class="inline">id</code>, edited rows with
+        their existing <code class="inline">id</code>); rows omitted from the payload are deleted. The client does
+        <strong>not</strong> need to send the Self row &mdash; the server always keeps exactly one, derived from the
+        profile, and ignores/rejects any attempt to edit or omit it (see <a href="#notes">Implementation Notes</a>).
+      </p>
+      <h4>Request body</h4>
+      <pre>{
+  "familyMembers": [
+    { "id": 12, "name": "Priya Sharma", "dateOfBirth": "1988-03-15",
+      "relationship": "Spouse", "mobile": "9876543210", "livingTogether": "Yes" },
+    { "name": "Aarav Sharma", "dateOfBirth": "2014-09-20",
+      "relationship": "Son", "mobile": "", "livingTogether": "Yes" }
+  ]
+}</pre>
+      <h4>Response 200</h4>
+      <pre>{ "data": [ /* full, reloaded list incl. Self row, same shape as GET */ ] }</pre>
+      <h4>Errors</h4>
+      <pre>400 VALIDATION_ERROR   -- missing name/relationship/livingTogether, bad mobile format
+400 SELF_ROW_LOCKED    -- payload tried to edit, remove, or duplicate the Self row</pre>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="policies">6. My Policies</h2>
+  <p class="lede">Same bulk-save pattern as My Family, mapped to <code class="inline">savePolicies()</code>. <code class="inline">maturityDate</code> and <code class="inline">nextPremiumDate</code> are server-computed, never stored (see <a href="#notes">Implementation Notes</a>).</p>
+
+  <div class="endpoint-card">
+    <div class="endpoint-head">
+      <span class="method-badge method-get">GET</span>
+      <span class="endpoint-path">/policies</span>
+      <span class="endpoint-auth">Bearer token</span>
+    </div>
+    <div class="endpoint-body">
+      <h4>Response 200</h4>
+      <pre>{
+  "data": [
+    {
+      "id": 3, "policyNo": "LIC-2015-00123", "bankName": "LIC of India",
+      "policyType": "Life Insurance", "startDate": "2015-04-01",
+      "policyTermYears": 20, "payingTermYears": 15, "emiFrequency": "Yearly",
+      "maturityDate": "2035-04-01",
+      "nextPremiumDate": "2027-04-01"
+    },
+    {
+      "id": 5, "policyNo": "SBI-2021-00456", "bankName": "SBI Life",
+      "policyType": "Life Insurance", "startDate": "2021-01-10",
+      "policyTermYears": 25, "payingTermYears": 20, "emiFrequency": "Single Premium",
+      "maturityDate": "2046-01-10",
+      "nextPremiumDate": null
+    }
+  ]
+}</pre>
+      <p class="desc"><code class="inline">nextPremiumDate</code> is <code class="inline">null</code> for <code class="inline">"Single Premium"</code> policies &mdash; the UI renders that as "N/A", same as <code class="inline">calcNextPremiumDate()</code>.</p>
+    </div>
+  </div>
+
+  <div class="endpoint-card">
+    <div class="endpoint-head">
+      <span class="method-badge method-put">PUT</span>
+      <span class="endpoint-path">/policies</span>
+      <span class="endpoint-auth">Bearer token</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="desc">Replaces the user's entire policy list in one transaction, matching <code class="inline">savePolicies()</code>.</p>
+      <h4>Request body</h4>
+      <pre>{
+  "policies": [
+    { "id": 3, "policyNo": "LIC-2015-00123", "bankName": "LIC of India",
+      "policyType": "Life Insurance", "startDate": "2015-04-01",
+      "policyTermYears": 20, "payingTermYears": 15, "emiFrequency": "Yearly" }
+  ]
+}</pre>
+      <h4>Response 200</h4>
+      <pre>{ "data": [ /* full, reloaded list, same shape as GET */ ] }</pre>
+      <h4>Errors</h4>
+      <pre>400 VALIDATION_ERROR   -- missing/invalid field, or policyType/emiFrequency not in the allowed enum
+409 DUPLICATE_POLICY_NO -- policyNo repeated within this user's own list</pre>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="vehicles">7. My Vehicles</h2>
+  <p class="lede">Same bulk-save pattern again, mapped to <code class="inline">saveVehicles()</code>.</p>
+
+  <div class="endpoint-card">
+    <div class="endpoint-head">
+      <span class="method-badge method-get">GET</span>
+      <span class="endpoint-path">/vehicles</span>
+      <span class="endpoint-auth">Bearer token</span>
+    </div>
+    <div class="endpoint-body">
+      <h4>Response 200</h4>
+      <pre>{
+  "data": [
+    {
+      "id": 1, "registrationNo": "MH12AB1234", "vehicleType": "Car",
+      "make": "Maruti Suzuki", "modelYear": 2019,
+      "insurancePolicy": "HDFC-ERGO-MV-2024-7781", "pollutionUpto": "2026-12-05"
+    }
+  ]
+}</pre>
+    </div>
+  </div>
+
+  <div class="endpoint-card">
+    <div class="endpoint-head">
+      <span class="method-badge method-put">PUT</span>
+      <span class="endpoint-path">/vehicles</span>
+      <span class="endpoint-auth">Bearer token</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="desc">Replaces the user's entire vehicle list in one transaction, matching <code class="inline">saveVehicles()</code>.</p>
+      <h4>Request body</h4>
+      <pre>{
+  "vehicles": [
+    { "id": 1, "registrationNo": "MH12AB1234", "vehicleType": "Car",
+      "make": "Maruti Suzuki", "modelYear": 2019,
+      "insurancePolicy": "HDFC-ERGO-MV-2024-7781", "pollutionUpto": "2026-12-05" }
+  ]
+}</pre>
+      <h4>Response 200</h4>
+      <pre>{ "data": [ /* full, reloaded list, same shape as GET */ ] }</pre>
+      <h4>Errors</h4>
+      <pre>400 VALIDATION_ERROR      -- registrationNo fails the Indian RTO pattern, or vehicleType/modelYear invalid
+409 DUPLICATE_REG_NO      -- registrationNo already registered to any user (DB-wide UNIQUE constraint)</pre>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="dashboard">8. Dashboard Summary</h2>
+  <div class="endpoint-card">
+    <div class="endpoint-head">
+      <span class="method-badge method-get">GET</span>
+      <span class="endpoint-path">/dashboard/summary</span>
+      <span class="endpoint-auth">Bearer token</span>
+    </div>
+    <div class="endpoint-body">
+      <p class="desc">
+        Convenience endpoint for the Dashboard stat cards, so the SPA doesn't need to fetch and count all three
+        child collections just to render three numbers (<code class="inline">refreshHeaderAndStats()</code> in
+        MyBox.html). Purely additive &mdash; equally valid to derive these counts client-side from the three GET
+        endpoints above.
+      </p>
+      <h4>Response 200</h4>
+      <pre>{
+  "data": { "familyMembers": 4, "policies": 3, "vehicles": 2 }
+}</pre>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="validation">9. Validation Reference</h2>
+  <p class="lede">Server-side mirror of every client-side rule already enforced in MyBox.html, so the API rejects anything the UI shouldn't have allowed through in the first place.</p>
+  <table class="plain">
+    <tr><th>Field</th><th>Rule</th></tr>
+    <tr><td class="mono">mobile</td><td>Exactly 10 digits: <code class="inline">^[0-9]{10}$</code></td></tr>
+    <tr><td class="mono">email</td><td><code class="inline">^[^\s@]+@[^\s@]+\.[^\s@]+$</code></td></tr>
+    <tr><td class="mono">family.relationship</td><td>One of: Self, Spouse, Son, Daughter, Father, Mother, Brother, Sister, Doughter-in-law, Son-in-law, Uncle, Aunt, Cousin Sister, Cousin Brother</td></tr>
+    <tr><td class="mono">family.livingTogether</td><td><code class="inline">Yes</code> / <code class="inline">No</code> &mdash; forced to <code class="inline">NA</code> and read-only when relationship is Self</td></tr>
+    <tr><td class="mono">policy.policyType</td><td>Life Insurance / Health Insurance</td></tr>
+    <tr><td class="mono">policy.emiFrequency</td><td>Monthly / Quaterly / Half Yearly / Yearly / Single Premium</td></tr>
+    <tr><td class="mono">policy.policyTermYears / payingTermYears</td><td>Integer, 1&ndash;60</td></tr>
+    <tr><td class="mono">vehicle.registrationNo</td><td>Indian RTO format: <code class="inline">^[A-Z]{2}[0-9]{1,2}[A-Z]{1,3}[0-9]{4}$</code> (client uppercases before sending)</td></tr>
+    <tr><td class="mono">vehicle.vehicleType</td><td>Car / Bike / Scooty</td></tr>
+    <tr><td class="mono">vehicle.modelYear</td><td>Integer, 1990&ndash;(current year + 1)</td></tr>
+    <tr><td class="mono">vehicle.make</td><td>Non-empty string &mdash; client offers a curated dropdown of Indian automobile manufacturers, but the API stores free text (not a DB enum), so it never blocks a manufacturer missing from that list</td></tr>
+  </table>
+
+  <!-- ============================================================ -->
+  <h2 id="errors">10. Error Codes</h2>
+  <table class="plain">
+    <tr><th>HTTP</th><th>Code</th><th>Meaning</th></tr>
+    <tr><td>400</td><td class="mono">VALIDATION_ERROR</td><td>Request body failed field validation</td></tr>
+    <tr><td>400</td><td class="mono">SELF_ROW_LOCKED</td><td>Client attempted to edit/remove/duplicate the Self family row</td></tr>
+    <tr><td>401</td><td class="mono">UNAUTHENTICATED</td><td>Missing or invalid bearer token</td></tr>
+    <tr><td>401</td><td class="mono">INVALID_OTP</td><td>OTP incorrect, expired, or already used</td></tr>
+    <tr><td>404</td><td class="mono">NOT_FOUND</td><td>Referenced record does not exist for this user</td></tr>
+    <tr><td>409</td><td class="mono">ALREADY_EXISTS</td><td>Profile already exists for this mobile number</td></tr>
+    <tr><td>409</td><td class="mono">DUPLICATE_POLICY_NO</td><td><code class="inline">policy_no</code> already used elsewhere in this user's own list</td></tr>
+    <tr><td>409</td><td class="mono">DUPLICATE_REG_NO</td><td><code class="inline">registration_no</code> already registered (globally unique)</td></tr>
+    <tr><td>429</td><td class="mono">RATE_LIMITED</td><td>Too many OTP requests in a short window</td></tr>
+    <tr><td>500</td><td class="mono">INTERNAL_ERROR</td><td>Unhandled server error</td></tr>
+  </table>
+
+  <!-- ============================================================ -->
+  <h2 id="notes">11. Implementation Notes</h2>
+
+  <div class="warn-box">
+    <strong>OTP storage is not in MyBox-database-schema.html</strong>
+    The prototype hardcodes <code class="inline">MOCK_OTP = '123456'</code> and never persists anything OTP-related.
+    A real backend needs a small additional table, e.g.:
+    <pre style="margin-top:10px;">CREATE TABLE otp_requests (
+    id          BIGSERIAL PRIMARY KEY,
+    mobile      VARCHAR(10) NOT NULL,
+    otp_hash    TEXT NOT NULL,
+    expires_at  TIMESTAMPTZ NOT NULL,
+    attempts    SMALLINT NOT NULL DEFAULT 0,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX idx_otp_requests_mobile ON otp_requests(mobile);</pre>
+    This is additive to the existing schema and does not change <code class="inline">users</code>/<code class="inline">family_members</code>/<code class="inline">policies</code>/<code class="inline">vehicles</code>.
+  </div>
+
+  <div class="warn-box">
+    <strong>living_together CHECK constraint needs updating for "NA"</strong>
+    MyBox.html now forces <code class="inline">livingTogether = "NA"</code> on the Self row, but the published
+    <code class="inline">family_members.living_together</code> column in MyBox-database.sql still has
+    <code class="inline">CHECK (living_together IN ('Yes', 'No'))</code>. This migration is required before the
+    bulk <code class="inline">PUT /family-members</code> endpoint can persist a Self row:
+    <pre style="margin-top:10px;">ALTER TABLE family_members DROP CONSTRAINT family_members_living_together_check;
+ALTER TABLE family_members ADD CONSTRAINT family_members_living_together_check
+    CHECK (living_together IN ('Yes', 'No', 'NA'));</pre>
+  </div>
+
+  <div class="warn-box">
+    <strong>No DB-level guarantee of exactly one Self row per user</strong>
+    The app's UI enforces "exactly one Self row, created at signup, never deletable" entirely client-side. To make
+    the <code class="inline">SELF_ROW_LOCKED</code> rule in <code class="inline">PUT /family-members</code> safe
+    under concurrent requests, add a partial unique index:
+    <pre style="margin-top:10px;">CREATE UNIQUE INDEX uq_family_members_one_self_per_user
+    ON family_members(user_id) WHERE relationship = 'Self';</pre>
+  </div>
+
+  <div class="note-box">
+    <strong>Bulk "replace whole list" semantics.</strong> Each of <code class="inline">PUT /family-members</code>,
+    <code class="inline">PUT /policies</code>, <code class="inline">PUT /vehicles</code> should run inside a single
+    DB transaction that deletes every existing row for that user/collection not present in the payload, upserts the
+    rows that are present, and returns the freshly reloaded list &mdash; exactly mirroring how
+    <code class="inline">saveFamilyMembers()</code> / <code class="inline">savePolicies()</code> /
+    <code class="inline">saveVehicles()</code> overwrite the in-memory array in one shot on the client.
+  </div>
+
+  <div class="note-box">
+    <strong>Computed fields stay computed.</strong> <code class="inline">age</code>, <code class="inline">maturityDate</code>
+    and <code class="inline">nextPremiumDate</code> are never written to the database &mdash; they depend on "today",
+    exactly as noted in MyBox-database-schema.html. <code class="inline">age</code>/<code class="inline">maturityDate</code>
+    come from the <code class="inline">v_family_members</code>/<code class="inline">v_policies</code> views;
+    <code class="inline">nextPremiumDate</code> is computed in application code, porting the logic in
+    <code class="inline">calcNextPremiumDate()</code> (roll the start date forward one EMI cycle at a time until it
+    lands on/after today; <code class="inline">"Single Premium"</code> &rarr; <code class="inline">null</code>).
+  </div>
+
+  <div class="note-box">
+    <strong>Export stays client-side.</strong> The Excel/PDF export in MyBox.html (SheetJS + jsPDF) runs entirely in
+    the browser against data already fetched via the GET endpoints above, so no dedicated export endpoint is
+    required. If server-side export is wanted later (e.g. to avoid shipping those libraries to the client), it would
+    be a <code class="inline">GET /family-members/export?format=xlsx|pdf</code>-style addition layered on top of
+    this spec, not a replacement for it.
+  </div>
+
+  <!-- ============================================================ -->
+  <h2 id="react">12. React Frontend Integration</h2>
+
+  <h3>Component &#8594; endpoint map</h3>
+  <table class="plain">
+    <tr><th>MyBox.html screen</th><th>React component (suggested)</th><th>Endpoints used</th></tr>
+    <tr><td>Login (mobile + OTP)</td><td class="mono">&lt;LoginPage/&gt;</td><td class="mono">POST /auth/otp/send, POST /auth/otp/verify</td></tr>
+    <tr><td>Onboarding</td><td class="mono">&lt;OnboardingPage/&gt;</td><td class="mono">POST /profile</td></tr>
+    <tr><td>Dashboard</td><td class="mono">&lt;DashboardPage/&gt;</td><td class="mono">GET /dashboard/summary</td></tr>
+    <tr><td>My Family</td><td class="mono">&lt;FamilyPage/&gt;</td><td class="mono">GET /family-members, PUT /family-members</td></tr>
+    <tr><td>My Policies</td><td class="mono">&lt;PoliciesPage/&gt;</td><td class="mono">GET /policies, PUT /policies</td></tr>
+    <tr><td>My Vehicles</td><td class="mono">&lt;VehiclesPage/&gt;</td><td class="mono">GET /vehicles, PUT /vehicles</td></tr>
+    <tr><td>Update Profile modal</td><td class="mono">&lt;UpdateProfileModal/&gt;</td><td class="mono">GET /profile, PUT /profile</td></tr>
+    <tr><td>Export modal</td><td class="mono">&lt;ExportModal/&gt;</td><td>None &mdash; reuses data already in page state</td></tr>
+    <tr><td>Sign Out</td><td class="mono">signOut()</td><td>Client-side only: discard JWT, redirect to Login</td></tr>
+  </table>
+
+  <h3>Service layer example</h3>
+  <pre>// src/api/client.js
+const BASE_URL = '/api/v1';
+
+async function request(path, options = {}) {
+  const token = localStorage.getItem('mybox_token');
+  const res = await fetch(BASE_URL + path, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
+  });
+  const body = await res.json();
+  if (!res.ok) throw body.error;   // { code, message, fields? }
+  return body.data;
+}
+
+export const api = {
+  sendOtp: (mobile) => request('/auth/otp/send', { method: 'POST', body: JSON.stringify({ mobile }) }),
+  verifyOtp: (mobile, otp) => request('/auth/otp/verify', { method: 'POST', body: JSON.stringify({ mobile, otp }) }),
+  createProfile: (payload) => request('/profile', { method: 'POST', body: JSON.stringify(payload) }),
+  getProfile: () => request('/profile'),
+  updateProfile: (payload) => request('/profile', { method: 'PUT', body: JSON.stringify(payload) }),
+  getFamilyMembers: () => request('/family-members'),
+  saveFamilyMembers: (familyMembers) => request('/family-members', { method: 'PUT', body: JSON.stringify({ familyMembers }) }),
+  getPolicies: () => request('/policies'),
+  savePolicies: (policies) => request('/policies', { method: 'PUT', body: JSON.stringify({ policies }) }),
+  getVehicles: () => request('/vehicles'),
+  saveVehicles: (vehicles) => request('/vehicles', { method: 'PUT', body: JSON.stringify({ vehicles }) }),
+  getDashboardSummary: () => request('/dashboard/summary'),
+};</pre>
+
+  <h3>Save button &#8594; API call (My Family example)</h3>
+  <p class="lede">
+    Directly mirrors <code class="inline">saveFamilyMembers()</code>: client-side validation first (same rules as
+    §9), then one <code class="inline">PUT</code> with the full, cleaned row list; on success, re-render the table
+    from the response (which now includes the server-managed Self row) and refresh the dashboard counts.
+  </p>
+  <pre>async function handleSaveFamily(rows) {
+  // 1. same client-side checks MyBox.html already does (name, relationship, livingTogether, mobile format)
+  const cleaned = validateAndCleanFamilyRows(rows);
+
+  // 2. one network call, replacing the whole collection
+  const updated = await api.saveFamilyMembers(cleaned);
+
+  // 3. re-render from the authoritative server response
+  setFamilyMembers(updated);
+  refreshDashboardCounts();
+}</pre>
+
+</div>
+
+</body>
+</html>
