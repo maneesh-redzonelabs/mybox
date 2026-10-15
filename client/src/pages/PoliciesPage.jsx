@@ -119,6 +119,7 @@ export default function PoliciesPage() {
         </button>
       </div>
       <div className="panel-card">
+        <div className="table-scroll">
         <table className="data-table">
           <thead>
             <tr>
@@ -193,6 +194,7 @@ export default function PoliciesPage() {
             })}
           </tbody>
         </table>
+        </div>
         <button type="button" className="add-row-btn" onClick={addRow}>+ Add Policy</button>
         <div className="error-msg">{error}</div>
         <div className="panel-actions">

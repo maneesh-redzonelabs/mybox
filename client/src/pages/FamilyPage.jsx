@@ -126,6 +126,7 @@ export default function FamilyPage() {
         </button>
       </div>
       <div className="panel-card">
+        <div className="table-scroll">
         <table className="data-table">
           <thead>
             <tr>
@@ -229,6 +230,7 @@ export default function FamilyPage() {
             })}
           </tbody>
         </table>
+        </div>
         <button type="button" className="add-row-btn" onClick={addRow}>+ Add Family Member</button>
         <div className="error-msg">{error}</div>
         <div className="panel-actions">

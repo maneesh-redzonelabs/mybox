@@ -114,6 +114,7 @@ export default function VehiclesPage() {
         </button>
       </div>
       <div className="panel-card">
+        <div className="table-scroll">
         <table className="data-table">
           <thead>
             <tr>
@@ -190,6 +191,7 @@ export default function VehiclesPage() {
             })}
           </tbody>
         </table>
+        </div>
         <button type="button" className="add-row-btn" onClick={addRow}>+ Add Vehicle</button>
         <div className="error-msg">{error}</div>
         <div className="panel-actions">

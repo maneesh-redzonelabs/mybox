@@ -108,7 +108,9 @@ input:focus {
   justify-content: space-between;
 }
 .otp-boxes input {
-  width: 44px;
+  flex: 1;
+  min-width: 0;
+  max-width: 44px;
   height: 50px;
   text-align: center;
   font-size: 20px;
@@ -503,4 +505,108 @@ input:focus {
 }
 .format-choice-btn .format-icon {
   font-size: 26px;
+}
+
+/* ---------- Responsive table wrapper ---------- */
+/* Wide data-tables scroll horizontally instead of breaking the layout on
+   narrow screens, rather than attempting to reflow 8-11 columns into cards. */
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.table-scroll .data-table {
+  min-width: 640px;
+}
+
+/* ============================================================
+   Responsive Web Design breakpoints
+   ============================================================ */
+
+/* Tablet and below: sidebar collapses into a horizontal top nav bar */
+@media (max-width: 900px) {
+  .app-shell {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    padding: 10px 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .sidebar .brand {
+    padding: 0 16px 0 4px;
+    margin-bottom: 0;
+    border-bottom: none;
+    border-right: 1px solid #1f2937;
+    white-space: nowrap;
+  }
+  .nav-item {
+    padding: 10px 14px;
+    border-left: none;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .nav-item.active {
+    border-left-color: transparent;
+    border-bottom-color: var(--primary);
+  }
+
+  .topbar {
+    padding: 0 16px;
+  }
+  .work-area {
+    padding: 18px;
+  }
+
+  .view-header {
+    flex-wrap: wrap;
+  }
+
+  .panel-card {
+    padding: 16px;
+  }
+}
+
+/* Phones: tighten spacing further and let the topbar welcome text shrink out
+   of the way before the profile icon */
+@media (max-width: 560px) {
+  .work-area {
+    padding: 14px;
+  }
+  .panel-card {
+    padding: 12px;
+  }
+  .topbar {
+    padding: 0 12px;
+    gap: 10px;
+  }
+  .topbar .welcome {
+    display: none;
+  }
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+  .auth-card {
+    padding: 28px 20px;
+  }
+  .modal-overlay {
+    padding: 16px;
+  }
+  .modal-box {
+    padding: 22px 18px;
+  }
+  .format-choice-row {
+    flex-direction: column;
+  }
+  .panel-actions {
+    flex-wrap: wrap;
+  }
+  .panel-actions .btn {
+    flex: 1;
+    min-width: 120px;
+  }
 }
