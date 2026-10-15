@@ -33,8 +33,16 @@ AND NOT EXISTS (
     SELECT 1 FROM family_members fm WHERE fm.user_id = u.id AND fm.relationship = 'Self'
 );
 
-INSERT INTO policies (user_id, policy_no, bank_name, policy_type, start_date, policy_term_years, paying_term_years, emi_frequency)
-SELECT u.id, p.policy_no, p.bank_name, p.policy_type, p.start_date, p.policy_term_years, p.paying_term_years, p.emi_frequency
+-- policy_no / registration_no are kept plaintext here (the migrate.js backfill step that runs
+-- right after this encrypts anything not already "enc:v1:"-prefixed). Uniqueness lives on
+-- policy_no_hash / registration_no_hash (see migrations/006_encrypt_sensitive_columns.sql), so the
+-- matching lookup hash is computed in SQL via pgcrypto's hmac(), using the same HMAC-SHA256
+-- algorithm and the same HMAC_KEY as src/lib/crypto.js's hashForLookup() -- the key is passed in by
+-- migrate.js / resetTestSchema.js via set_config('app.hmac_key_b64', ...) before this file runs.
+INSERT INTO policies (user_id, policy_no, policy_no_hash, bank_name, policy_type, start_date, policy_term_years, paying_term_years, emi_frequency)
+SELECT u.id, p.policy_no,
+       encode(hmac(convert_to(p.policy_no, 'UTF8'), decode(current_setting('app.hmac_key_b64'), 'base64'), 'sha256'), 'hex'),
+       p.bank_name, p.policy_type, p.start_date, p.policy_term_years, p.paying_term_years, p.emi_frequency
 FROM users u
 CROSS JOIN (
     VALUES
@@ -43,10 +51,12 @@ CROSS JOIN (
         ('SBI-2021-00456',  'SBI Life',     'Life Insurance',   DATE '2021-01-10', 25, 20, 'Single Premium')
 ) AS p(policy_no, bank_name, policy_type, start_date, policy_term_years, paying_term_years, emi_frequency)
 WHERE u.mobile = '9999999999'
-ON CONFLICT (user_id, policy_no) DO NOTHING;
+ON CONFLICT (user_id, policy_no_hash) DO NOTHING;
 
-INSERT INTO vehicles (user_id, registration_no, vehicle_type, make, model_year, insurance_policy, pollution_upto)
-SELECT u.id, v.registration_no, v.vehicle_type, v.make, v.model_year, v.insurance_policy, v.pollution_upto
+INSERT INTO vehicles (user_id, registration_no, registration_no_hash, vehicle_type, make, model_year, insurance_policy, pollution_upto)
+SELECT u.id, v.registration_no,
+       encode(hmac(convert_to(v.registration_no, 'UTF8'), decode(current_setting('app.hmac_key_b64'), 'base64'), 'sha256'), 'hex'),
+       v.vehicle_type, v.make, v.model_year, v.insurance_policy, v.pollution_upto
 FROM users u
 CROSS JOIN (
     VALUES
@@ -54,4 +64,4 @@ CROSS JOIN (
         ('MH14CD5678', 'Bike', 'Honda Motorcycle & Scooter India (HMSI)',   2021, 'ICICI-LOMBARD-MV-2024-3321', DATE '2026-11-18')
 ) AS v(registration_no, vehicle_type, make, model_year, insurance_policy, pollution_upto)
 WHERE u.mobile = '9999999999'
-ON CONFLICT (registration_no) DO NOTHING;
+ON CONFLICT (registration_no_hash) DO NOTHING;

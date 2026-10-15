@@ -15,6 +15,10 @@ module.exports = {
       ? (process.env.DB_SCHEMA_TEST || 'MyBox_test')
       : (process.env.DB_SCHEMA || 'MyBox'),
   },
+  security: {
+    encryptionKey: process.env.ENCRYPTION_KEY || '',
+    hmacKey: process.env.HMAC_KEY || '',
+  },
   jwt: {
     secret: process.env.JWT_SECRET || 'dev-secret-change-me',
     expiresIn: process.env.JWT_EXPIRES_IN || '2h',

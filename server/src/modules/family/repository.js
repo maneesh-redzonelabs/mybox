@@ -1,4 +1,5 @@
 const { query, withTransaction } = require('../../config/db');
+const { encryptField, decryptField } = require('../../lib/crypto');
 
 function mapRow(row) {
   return {
@@ -7,7 +8,7 @@ function mapRow(row) {
     dateOfBirth: row.date_of_birth || null,
     age: row.age === null || row.age === undefined ? null : Number(row.age),
     relationship: row.relationship,
-    mobile: row.mobile || '',
+    mobile: decryptField(row.mobile) || '',
     livingTogether: row.living_together,
     isSelf: row.relationship === 'Self',
   };
@@ -58,13 +59,13 @@ async function bulkReplace(userId, members) {
           `UPDATE family_members
            SET name = $1, date_of_birth = $2, relationship = $3, mobile = $4, living_together = $5
            WHERE id = $6 AND user_id = $7 AND relationship <> 'Self'`,
-          [m.name, m.dateOfBirth || null, m.relationship, m.mobile || null, m.livingTogether, m.id, userId]
+          [m.name, m.dateOfBirth || null, m.relationship, encryptField(m.mobile || null), m.livingTogether, m.id, userId]
         );
       } else {
         await client.query(
           `INSERT INTO family_members (user_id, name, date_of_birth, relationship, mobile, living_together)
            VALUES ($1, $2, $3, $4, $5, $6)`,
-          [userId, m.name, m.dateOfBirth || null, m.relationship, m.mobile || null, m.livingTogether]
+          [userId, m.name, m.dateOfBirth || null, m.relationship, encryptField(m.mobile || null), m.livingTogether]
         );
       }
     }
@@ -79,13 +80,13 @@ async function bulkReplace(userId, members) {
         `UPDATE family_members
          SET name = $1, date_of_birth = $2, mobile = $3, living_together = 'NA'
          WHERE user_id = $4 AND relationship = 'Self'`,
-        [user.name, user.date_of_birth, user.mobile, userId]
+        [user.name, user.date_of_birth, encryptField(user.mobile), userId]
       );
     } else {
       await client.query(
         `INSERT INTO family_members (user_id, name, date_of_birth, relationship, mobile, living_together)
          VALUES ($1, $2, $3, 'Self', $4, 'NA')`,
-        [userId, user.name, user.date_of_birth, user.mobile]
+        [userId, user.name, user.date_of_birth, encryptField(user.mobile)]
       );
     }
 

@@ -25,6 +25,12 @@ module.exports = async function resetTestSchema() {
       `TRUNCATE TABLE otp_requests, vehicles, policies, family_members, users RESTART IDENTITY CASCADE`
     );
 
+    // seed.sql computes policy_no_hash/registration_no_hash in SQL (via pgcrypto's hmac()) using
+    // the same HMAC_KEY as src/lib/crypto.js, so the key must be available as a session GUC first.
+    if (process.env.HMAC_KEY) {
+      await client.query(`SELECT set_config('app.hmac_key_b64', $1, false)`, [process.env.HMAC_KEY]);
+    }
+
     const seedPath = path.join(__dirname, '..', 'seed', 'seed.sql');
     const seedSql = fs.readFileSync(seedPath, 'utf8');
     await client.query(seedSql);
